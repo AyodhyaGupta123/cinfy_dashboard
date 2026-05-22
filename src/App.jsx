@@ -1,0 +1,185 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ToastProvider } from "./components/UI/Toast";
+import DashboardLayout from "./components/Layout/DashboardLayout";
+import Analytics from "./pages/Analytics";
+import Applications from "./pages/Applications";
+import CustomReports from "./pages/CustomReports";
+import DebugDashboard from "./pages/DebugDashboard";
+import Earnings from "./pages/Earnings";
+import Transactions from "./pages/Transactions";
+import PaymentSettings from "./pages/PaymentSettings";
+import ResourceCenter from "./pages/ResourceCenter";
+import AppAdsTxt from "./pages/AppAdsTxt";
+import ReferralProgram from "./pages/ReferralProgram";
+import Profile from "./pages/Profile";
+import GeneralSettings from "./pages/GeneralSettings";
+import Users from "./pages/Users";
+import Invoices from "./pages/Invoices";
+import Login from "./pages/Login";
+import KanbanBoard from "./pages/KanbanBoard";
+import Calendar from "./pages/Calendar";
+import Chat from "./pages/Chat";
+import Notifications from "./pages/Notifications";
+import DataTables from "./pages/DataTables";
+import ChartsGallery from "./pages/ChartsGallery";
+import NotFound from "./pages/NotFound";
+import AddProduct from "./pages/inventory/products/AddProduct";
+import Products from "./pages/inventory/products/Products";
+import Categories from "./pages/inventory/categories/Categories";
+
+import { AuthProvider } from "./context/AuthContext";
+import useScrollToTop from "./hooks/useScrollToTop";
+import AddCategory from "./pages/inventory/categories/AddCategory";
+import EditCategory from "./pages/inventory/categories/EditCategory";
+import EditProduct from "./pages/inventory/products/EditProduct";
+import ProductDetails from "./pages/inventory/products/ProductDetails";
+import StockIn from "./pages/inventory/stock/StockIn";
+import StockOut from "./pages/inventory/stock/StockOut";
+import AddStockIn from "./pages/inventory/stock/AddStockIn";
+import AddStockOut from "./pages/inventory/stock/AddStockOut";
+import StockAdjustments from "./pages/inventory/stock/StockAdjustments";
+import AddAdjustment from "./pages/inventory/stock/AddAdjustment";
+import LowStock from "./pages/inventory/stock/LowStock";
+import Brands from "./pages/inventory/brands/Brands";
+import AddBrand from "./pages/inventory/brands/AddBrand";
+import Warehouses from "./pages/inventory/warehouse/Warehouses";
+import AddWarehouse from "./pages/inventory/warehouse/AddWarehouse";
+import Transfers from "./pages/inventory/warehouse/transfers/Transfers";
+import CreateTransfer from "./pages/inventory/warehouse/transfers/CreateTransfer";
+import Orders from "./pages/inventory/orders/Orders";
+import Refunds from "./pages/inventory/orders/Refunds";
+import Returns from "./pages/inventory/orders/Returns";
+import OrderDetails from "./pages/inventory/orders/OrderDetails";
+import RefundDetails from "./pages/inventory/orders/RefundDetails";
+import ReturnDetails from "./pages/inventory/orders/ReturnDetails";
+
+function ScrollToTop() {
+  useScrollToTop();
+  return null;
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <ToastProvider>
+        <BrowserRouter>
+          <ScrollToTop />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<DashboardLayout />}>
+              <Route index element={<Analytics />} />
+              <Route path="users" element={<Users />} />
+              <Route path="kanban" element={<KanbanBoard />} />
+              <Route path="calendar" element={<Calendar />} />
+              <Route path="chat" element={<Chat />} />
+              <Route path="notifications" element={<Notifications />} />
+              <Route path="tables" element={<DataTables />} />
+              <Route path="charts" element={<ChartsGallery />} />
+              <Route path="reports" element={<CustomReports />} />
+              <Route path="applications" element={<Applications />} />
+              <Route path="debug" element={<DebugDashboard />} />
+              <Route path="payments/earnings" element={<Earnings />} />
+              <Route path="payments/transactions" element={<Transactions />} />
+              <Route path="payments/invoices" element={<Invoices />} />
+              <Route path="payments/settings" element={<PaymentSettings />} />
+              <Route path="resources" element={<ResourceCenter />} />
+              <Route path="app-ads" element={<AppAdsTxt />} />
+              <Route path="referral" element={<ReferralProgram />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="settings" element={<GeneralSettings />} />
+              <Route path="inventory/products" element={<Products />} />
+              <Route path="inventory/products/add" element={<AddProduct />} />
+              <Route path="inventory/categories" element={<Categories />} />
+              <Route
+                path="inventory/categories/add"
+                element={<AddCategory />}
+              />
+              <Route
+                path="/inventory/categories/edit/:id"
+                element={<EditCategory />}
+              />
+              <Route
+                path="/inventory/products/edit/:id"
+                element={<EditProduct />}
+              />
+              <Route
+                path="/inventory/products/:id"
+                element={<ProductDetails />}
+              />
+              <Route path="/inventory/stock-in" element={<StockIn />} />
+              <Route path="/inventory/stock-out" element={<StockOut />} />
+              <Route path="/inventory/stock-in/add" element={<AddStockIn />} />
+              <Route
+                path="/inventory/stock-out/add"
+                element={<AddStockOut />}
+              />
+              <Route
+                path="/inventory/stock-adjustments"
+                element={<StockAdjustments />}
+              />
+              <Route
+                path="/inventory/stock-adjustments/add"
+                element={<AddAdjustment />}
+              />
+              <Route
+                path="/inventory/low-stock"
+                element={<LowStock />}
+              />
+              <Route
+                path="/inventory/brands"
+                element={<Brands />}
+              />
+              <Route
+                path="/inventory/brands/add"
+                element={<AddBrand />}
+              />
+              <Route
+                path="/inventory/warehouses"
+                element={<Warehouses />}
+              />
+              <Route
+                path="/inventory/warehouses/add"
+                element={<AddWarehouse />}
+              />
+              <Route
+                path="/inventory/transfers"
+                element={<Transfers />}
+              />
+              <Route
+                path="/inventory/transfers/create"
+                element={<CreateTransfer />}
+              />
+              <Route
+                path="/inventory/orders"
+                element={<Orders />}
+              />
+              <Route
+                path="/inventory/refunds"
+                element={<Refunds />}
+              />
+              <Route
+                path="/inventory/returns"
+                element={<Returns />}
+              />
+              <Route
+                path="/inventory/orders/:id"
+                element={<OrderDetails />}
+              />
+              <Route
+                path="/inventory/refunds/:id"
+                element={<RefundDetails />}
+              />
+              <Route
+                path="/inventory/returns/:id"
+                element={<ReturnDetails />}
+              />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </ToastProvider>
+    </AuthProvider>
+  );
+}
+
+export default App;

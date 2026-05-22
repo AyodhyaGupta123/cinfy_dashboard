@@ -1,0 +1,37 @@
+<svg width="320" height="72" viewBox="0 0 320 72" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="cinfy.io logo">
+  <defs>
+    <linearGradient id="bgGlow" x1="6" y1="6" x2="66" y2="66" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A"/>
+      <stop offset="1" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="ringStroke" x1="12" y1="12" x2="58" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#34D399"/>
+      <stop offset="0.5" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#60A5FA"/>
+    </linearGradient>
+    <linearGradient id="flare" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#6EE7B7"/>
+      <stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+    <linearGradient id="wordmarkAccent" x1="232" y1="18" x2="274" y2="52" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#34D399"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <filter id="softOuter" x="0" y="0" width="72" height="72" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.4"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#softOuter)">
+    <rect x="4" y="4" width="64" height="64" rx="18" fill="url(#bgGlow)"/>
+    <rect x="4.75" y="4.75" width="62.5" height="62.5" rx="17.25" stroke="#1E293B" stroke-width="1.5"/>
+  </g>
+
+  <path d="M47.5 21.5C43.6 17.7 38.4 15.5 32.8 15.5C21.4 15.5 12 24.7 12 36C12 47.3 21.4 56.5 32.8 56.5C38.4 56.5 43.6 54.3 47.5 50.5" stroke="url(#ringStroke)" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="49.5" cy="36" r="4.5" fill="url(#flare)"/>
+  <path d="M30.5 30.8L35.8 36L30.5 41.2" stroke="#7DD3FC" stroke-opacity="0.9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <text x="82" y="46" fill="#F8FAFC" font-size="35" font-family="Sora, Inter, sans-serif" font-weight="700">cinfy</text>
+  <text x="162" y="46" fill="url(#wordmarkAccent)" font-size="35" font-family="Sora, Inter, sans-serif" font-weight="700" letter-spacing="">.io</text>
+</svg>
