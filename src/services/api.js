@@ -1,49 +1,114 @@
-import axios from 'axios';
+import axios from "axios";
 
-/**
- * Standard API service layer using Axios.
- * Handles base URL, headers, and error interceptors.
- */
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
+  withCredentials: true,
+  timeout: 15000,
 });
 
-// Request Interceptor: Add Auth Token to every request
+// Request Interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token');
+    const token =
+      localStorage.getItem("auth_token") ||
+      localStorage.getItem("token");
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    }
+    }   
+
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle global errors (like 401 Unauthorized)
+// Response Interceptor
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Auto logout or redirect to login if token expires
-      localStorage.removeItem('auth_token');
-      window.location.href = '/login';
+    const status = error?.response?.status;
+
+    // Unauthorized
+    if (status === 401) {
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
     }
+
+    // Forbidden
+    if (status === 403) {
+      console.error("Access denied");
+    }
+
+    // Server Error
+    if (status >= 500) {
+      console.error("Server error");
+    }
+
     return Promise.reject(error);
   }
 );
 
 export default api;
 
-/**
- * Example Usage:
- * 
- * export const getUsers = () => api.get('/users');
- * export const createUser = (data) => api.post('/users', data);
- */
+/* =========================
+   AUTH APIs
+========================= */
+
+export const loginUser = (data) =>
+  api.post("/auth/login", data);
+
+export const registerUser = (data) =>
+  api.post("/auth/register", data);
+
+export const getProfile = () =>
+  api.get("/auth/profile");
+
+/* =========================
+   PRODUCT APIs
+========================= */
+
+export const getProducts = () =>
+  api.get("/products");
+
+export const createProduct = (data) =>
+  api.post("/products", data);
+
+export const updateProduct = (id, data) =>
+  api.put(`/products/${id}`, data);
+
+export const deleteProduct = (id) =>
+  api.delete(`/products/${id}`);
+
+/* =========================
+   CATEGORY APIs
+========================= */
+
+export const getCategories = () =>
+  api.get("/categories");
+
+export const createCategory = (data) =>
+  api.post("/categories", data);
+
+/* =========================
+   STOCK APIs
+========================= */
+
+export const stockIn = (data) =>
+  api.post("/stock-in", data);
+
+export const stockOut = (data) =>
+  api.post("/stock-out", data);
+
+export const getDashboardStats = () =>
+  api.get("/dashboard/stats");

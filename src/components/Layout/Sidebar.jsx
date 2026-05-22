@@ -676,7 +676,7 @@ const Sidebar = ({
                   whiteSpace: "nowrap",
                 }}
               >
-                Publisher
+                Inventory Manager
               </div>
             }
           >
@@ -712,7 +712,7 @@ const Sidebar = ({
                 <Globe style={{ width: 16, height: 16, color: "#fff" }} />
               </div>
               <span style={{ fontSize: 14, fontWeight: 600, color: "#000" }}>
-                Publisher
+                Inventory Manager
               </span>
             </div>
             <ChevronRight
@@ -807,7 +807,7 @@ const Sidebar = ({
                   display: "block",
                 }}
               >
-                Ankit Jatav
+                Ayodhya
               </NavLink>
             }
           >
@@ -892,7 +892,7 @@ const Sidebar = ({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      Ankit Jatav
+                      Ayodhya
                     </span>
                     <ChevronUp
                       style={{
