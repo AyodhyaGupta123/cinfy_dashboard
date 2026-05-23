@@ -1,50 +1,78 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Filter, Eye, Edit, Trash2, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import Card from "../../../components/UI/Card";
 import Button from "../../../components/UI/Button";
-import Badge from "../../../components/UI/Badge";
 import Breadcrumb from "../../../components/UI/Breadcrumb";
+import api from "../../../services/api";
+import { useToast } from "../../../components/UI/Toast";
+
+const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
+const getImageUrl = (image) => {
+  if (!image) return "";
+  if (image.startsWith("http")) return image;
+  return `${API_URL}${image}`;
+};
 
 const Products = () => {
   const [search, setSearch] = useState("");
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const toast = useToast();
 
-  const products = [
-    {
-      id: 1,
-      name: "Cotton Kurti",
-      sku: "PRD-001",
-      category: "Fashion",
-      brand: "Kat Forever",
-      stock: 120,
-      price: 1299,
-      status: "In Stock",
-    },
-    {
-      id: 2,
-      name: "Silk Saree",
-      sku: "PRD-002",
-      category: "Ethnic Wear",
-      brand: "Kat Forever",
-      stock: 8,
-      price: 2499,
-      status: "Low Stock",
-    },
-    {
-      id: 3,
-      name: "Designer Dupatta",
-      sku: "PRD-003",
-      category: "Accessories",
-      brand: "Kat Forever",
-      stock: 0,
-      price: 699,
-      status: "Out of Stock",
-    },
-  ];
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/products");
 
-  const filteredProducts = products.filter((item) =>
-    item.name.toLowerCase().includes(search.toLowerCase())
-  );
+      if (res.data.success) {
+        setProducts(res.data.products || []);
+      }
+    } catch (error) {
+      toast.error(
+        "Failed",
+        error.response?.data?.message || "Failed to load products"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this product?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      const res = await api.delete(`/products/${id}`);
+
+      if (res.data.success) {
+        toast.success("Deleted", "Product deleted successfully.");
+        fetchProducts();
+      }
+    } catch (error) {
+      toast.error(
+        "Delete Failed",
+        error.response?.data?.message || "Something went wrong"
+      );
+    }
+  };
+
+  const getProductStatus = (product) => {
+    const stock = Number(product.currentStock || 0);
+    const minStock = Number(product.minStockLevel || 0);
+
+    if (stock <= 0) return "Out of Stock";
+    if (stock <= minStock) return "Low Stock";
+    return "In Stock";
+  };
 
   const getStatusClass = (status) => {
     if (status === "In Stock") {
@@ -57,6 +85,36 @@ const Products = () => {
 
     return "bg-red-50 text-red-600 border-red-100";
   };
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((item) => {
+      const value = `${item.name || ""} ${item.sku || ""} ${
+        item.brand || ""
+      } ${item.category || ""}`;
+
+      return value.toLowerCase().includes(search.toLowerCase());
+    });
+  }, [products, search]);
+
+  const stats = useMemo(() => {
+    const total = products.length;
+
+    const outOfStock = products.filter(
+      (p) => Number(p.currentStock || 0) <= 0
+    ).length;
+
+    const lowStock = products.filter(
+      (p) =>
+        Number(p.currentStock || 0) > 0 &&
+        Number(p.currentStock || 0) <= Number(p.minStockLevel || 0)
+    ).length;
+
+    const inStock = products.filter(
+      (p) => Number(p.currentStock || 0) > Number(p.minStockLevel || 0)
+    ).length;
+
+    return { total, inStock, lowStock, outOfStock };
+  }, [products]);
 
   return (
     <div className="space-y-6">
@@ -92,24 +150,32 @@ const Products = () => {
             </div>
             <div>
               <p className="text-sm text-gray-500">Total Products</p>
-              <h3 className="text-2xl font-bold text-gray-900">3,240</h3>
+              <h3 className="text-2xl font-bold text-gray-900">
+                {stats.total}
+              </h3>
             </div>
           </div>
         </Card>
 
         <Card className="p-5">
           <p className="text-sm text-gray-500">In Stock</p>
-          <h3 className="text-2xl font-bold text-emerald-600">2,980</h3>
+          <h3 className="text-2xl font-bold text-emerald-600">
+            {stats.inStock}
+          </h3>
         </Card>
 
         <Card className="p-5">
           <p className="text-sm text-gray-500">Low Stock</p>
-          <h3 className="text-2xl font-bold text-orange-500">185</h3>
+          <h3 className="text-2xl font-bold text-orange-500">
+            {stats.lowStock}
+          </h3>
         </Card>
 
         <Card className="p-5">
           <p className="text-sm text-gray-500">Out of Stock</p>
-          <h3 className="text-2xl font-bold text-red-500">75</h3>
+          <h3 className="text-2xl font-bold text-red-500">
+            {stats.outOfStock}
+          </h3>
         </Card>
       </div>
 
@@ -168,55 +234,104 @@ const Products = () => {
             </thead>
 
             <tbody className="divide-y divide-gray-100">
-              {filteredProducts.length > 0 ? (
-                filteredProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 font-medium text-gray-900">
-                      {product.name}
-                    </td>
-                    <td className="px-4 py-4 text-gray-600">{product.sku}</td>
-                    <td className="px-4 py-4 text-gray-600">
-                      {product.category}
-                    </td>
-                    <td className="px-4 py-4 text-gray-600">
-                      {product.brand}
-                    </td>
-                    <td className="px-4 py-4 text-gray-600">
-                      {product.stock}
-                    </td>
-                    <td className="px-4 py-4 text-gray-600">
-                      ₹{product.price}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full border text-xs font-semibold ${getStatusClass(
-                          product.status
-                        )}`}
-                      >
-                        {product.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link to={`/inventory/products/${product.id}`}>
-                          <button className="p-2 rounded-lg hover:bg-gray-100 text-gray-600">
-                            <Eye size={17} />
-                          </button>
-                        </Link>
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan="8"
+                    className="px-4 py-10 text-center text-gray-500"
+                  >
+                    Loading products...
+                  </td>
+                </tr>
+              ) : filteredProducts.length > 0 ? (
+                filteredProducts.map((product) => {
+                  const status = getProductStatus(product);
 
-                        <Link to={`/inventory/products/edit/${product.id}`}>
-                          <button className="p-2 rounded-lg hover:bg-gray-100 text-gray-600">
-                            <Edit size={17} />
-                          </button>
-                        </Link>
+                  return (
+                    <tr
+                      key={product._id || product.id}
+                      className="hover:bg-gray-50"
+                    >
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          {product.image ? (
+                            <img
+                              src={getImageUrl(product.image)}
+                              alt={product.name}
+                              className="h-11 w-11 rounded-xl object-cover border border-gray-200"
+                            />
+                          ) : (
+                            <div className="h-11 w-11 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
+                              <Package size={18} />
+                            </div>
+                          )}
 
-                        <button className="p-2 rounded-lg hover:bg-red-50 text-red-500">
-                          <Trash2 size={17} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {product.name}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {product.unit || "pcs"}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-4 text-gray-600">
+                        {product.sku}
+                      </td>
+
+                      <td className="px-4 py-4 text-gray-600">
+                        {product.category || "-"}
+                      </td>
+
+                      <td className="px-4 py-4 text-gray-600">
+                        {product.brand || "-"}
+                      </td>
+
+                      <td className="px-4 py-4 text-gray-600">
+                        {product.currentStock || 0}
+                      </td>
+
+                      <td className="px-4 py-4 text-gray-600">
+                        ₹{product.sellingPrice || 0}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full border text-xs font-semibold ${getStatusClass(
+                            status
+                          )}`}
+                        >
+                          {status}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <Link to={`/inventory/products/${product._id}`}>
+                            <button className="p-2 rounded-lg hover:bg-gray-100 text-gray-600">
+                              <Eye size={17} />
+                            </button>
+                          </Link>
+
+                          <Link to={`/inventory/products/edit/${product._id}`}>
+                            <button className="p-2 rounded-lg hover:bg-gray-100 text-gray-600">
+                              <Edit size={17} />
+                            </button>
+                          </Link>
+
+                          <button
+                            onClick={() => handleDelete(product._id)}
+                            className="p-2 rounded-lg hover:bg-red-50 text-red-500"
+                          >
+                            <Trash2 size={17} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td

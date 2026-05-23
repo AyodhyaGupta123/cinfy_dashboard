@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   Edit,
@@ -11,34 +11,105 @@ import { Link, useParams } from "react-router-dom";
 import Card from "../../../components/UI/Card";
 import Button from "../../../components/UI/Button";
 import Breadcrumb from "../../../components/UI/Breadcrumb";
+import { useToast } from "../../../components/UI/Toast";
+import api from "../../../services/api";
+
+const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
+const getImageUrl = (image) => {
+  if (!image) return "";
+  if (image.startsWith("http")) return image;
+  return `${API_URL}${image}`;
+};
 
 const ProductDetails = () => {
   const { id } = useParams();
+  const toast = useToast();
 
-  const product = {
-    id,
-    name: "Cotton Kurti",
-    sku: "PRD-001",
-    barcode: "8901234567890",
-    category: "Fashion",
-    brand: "Kat Forever",
-    unit: "PCS",
-    purchasePrice: 850,
-    sellingPrice: 1299,
-    stock: 120,
-    lowStockAlert: 10,
-    status: "In Stock",
-    description: "Premium quality cotton kurti for daily and festive wear.",
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+
+      const res = await api.get(`/products/${id}`);
+
+      if (res.data.success) {
+        setProduct(res.data.product);
+      }
+    } catch (error) {
+      toast.error(
+        "Failed",
+        error.response?.data?.message || "Failed to load product details"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchProduct();
+  }, [id]);
+
+  const status = useMemo(() => {
+    if (!product) return "";
+
+    const stock = Number(product.currentStock || 0);
+    const minStock = Number(product.minStockLevel || 0);
+
+    if (stock <= 0) return "Out of Stock";
+    if (stock <= minStock) return "Low Stock";
+    return "In Stock";
+  }, [product]);
+
+  const statusClass = useMemo(() => {
+    if (status === "In Stock") {
+      return "bg-emerald-50 text-emerald-600 border-emerald-100";
+    }
+
+    if (status === "Low Stock") {
+      return "bg-orange-50 text-orange-600 border-orange-100";
+    }
+
+    return "bg-red-50 text-red-600 border-red-100";
+  }, [status]);
+
+  if (loading) {
+    return <div className="p-6 text-gray-500">Loading product details...</div>;
+  }
+
+  if (!product) {
+    return (
+      <div className="space-y-4">
+        <Breadcrumb
+          items={[
+            { label: "Dashboard", path: "/" },
+            { label: "Inventory" },
+            { label: "Products", path: "/inventory/products" },
+            { label: "Product Details" },
+          ]}
+        />
+
+        <Card className="p-6 text-center text-gray-500">
+          Product not found.
+        </Card>
+      </div>
+    );
+  }
 
   const infoItems = [
     { label: "SKU", value: product.sku },
-    { label: "Barcode", value: product.barcode },
-    { label: "Category", value: product.category },
-    { label: "Brand", value: product.brand },
-    { label: "Unit", value: product.unit },
-    { label: "Status", value: product.status },
+    { label: "Barcode", value: product.barcode || "-" },
+    { label: "Category", value: product.category || "-" },
+    { label: "Brand", value: product.brand || "-" },
+    { label: "Unit", value: product.unit || "pcs" },
+    { label: "Status", value: status },
   ];
+
+  const currentStock = Number(product.currentStock || 0);
+  const purchasePrice = Number(product.purchasePrice || 0);
+  const stockValue = currentStock * purchasePrice;
 
   return (
     <div className="space-y-6">
@@ -69,7 +140,7 @@ const ProductDetails = () => {
             </Button>
           </Link>
 
-          <Link to={`/inventory/products/edit/${product.id}`}>
+          <Link to={`/inventory/products/edit/${product._id}`}>
             <Button className="bg-emerald-500 hover:bg-emerald-600 text-white">
               <Edit size={18} />
               Edit Product
@@ -80,8 +151,16 @@ const ProductDetails = () => {
 
       <Card className="p-6 bg-white">
         <div className="flex flex-col lg:flex-row gap-6">
-          <div className="h-40 w-40 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
-            <Package size={64} />
+          <div className="h-40 w-40 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center overflow-hidden border border-gray-100">
+            {product.image ? (
+              <img
+                src={getImageUrl(product.image)}
+                alt={product.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <Package size={64} />
+            )}
           </div>
 
           <div className="flex-1">
@@ -90,11 +169,15 @@ const ProductDetails = () => {
                 <h2 className="text-2xl font-bold text-gray-900">
                   {product.name}
                 </h2>
-                <p className="text-gray-500 mt-2">{product.description}</p>
+                <p className="text-gray-500 mt-2">
+                  {product.description || "No description available."}
+                </p>
               </div>
 
-              <span className="inline-flex w-fit px-3 py-1 rounded-full border text-xs font-semibold bg-emerald-50 text-emerald-600 border-emerald-100">
-                {product.status}
+              <span
+                className={`inline-flex w-fit px-3 py-1 rounded-full border text-xs font-semibold ${statusClass}`}
+              >
+                {status}
               </span>
             </div>
 
@@ -105,7 +188,7 @@ const ProductDetails = () => {
                   Selling Price
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mt-2">
-                  ₹{product.sellingPrice}
+                  ₹{product.sellingPrice || 0}
                 </h3>
               </div>
 
@@ -115,7 +198,7 @@ const ProductDetails = () => {
                   Purchase Price
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mt-2">
-                  ₹{product.purchasePrice}
+                  ₹{product.purchasePrice || 0}
                 </h3>
               </div>
 
@@ -125,7 +208,7 @@ const ProductDetails = () => {
                   Current Stock
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mt-2">
-                  {product.stock}
+                  {currentStock}
                 </h3>
               </div>
             </div>
@@ -163,21 +246,21 @@ const ProductDetails = () => {
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <span className="text-sm text-gray-500">Available Stock</span>
               <span className="text-sm font-medium text-gray-900">
-                {product.stock} {product.unit}
+                {currentStock} {product.unit || "pcs"}
               </span>
             </div>
 
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <span className="text-sm text-gray-500">Low Stock Alert</span>
               <span className="text-sm font-medium text-orange-500">
-                {product.lowStockAlert} {product.unit}
+                {product.minStockLevel || 0} {product.unit || "pcs"}
               </span>
             </div>
 
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <span className="text-sm text-gray-500">Stock Value</span>
               <span className="text-sm font-medium text-gray-900">
-                ₹{product.stock * product.purchasePrice}
+                ₹{stockValue}
               </span>
             </div>
 
@@ -185,7 +268,7 @@ const ProductDetails = () => {
               <span className="text-sm text-gray-500">Barcode</span>
               <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-900">
                 <Barcode size={16} />
-                {product.barcode}
+                {product.barcode || "-"}
               </span>
             </div>
           </div>

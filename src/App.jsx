@@ -27,6 +27,8 @@ import AddProduct from "./pages/inventory/products/AddProduct";
 import Products from "./pages/inventory/products/Products";
 import Categories from "./pages/inventory/categories/Categories";
 
+import ChatBotWidget from "./components/ChatBotWidget";
+
 import { AuthProvider } from "./context/AuthContext";
 import useScrollToTop from "./hooks/useScrollToTop";
 import AddCategory from "./pages/inventory/categories/AddCategory";
@@ -71,7 +73,7 @@ function App() {
               <Route path="users" element={<Users />} />
               <Route path="kanban" element={<KanbanBoard />} />
               <Route path="calendar" element={<Calendar />} />
-              <Route path="chat" element={<Chat />} />
+              
               <Route path="notifications" element={<Notifications />} />
               <Route path="tables" element={<DataTables />} />
               <Route path="charts" element={<ChartsGallery />} />
@@ -90,6 +92,9 @@ function App() {
               <Route path="inventory/products" element={<Products />} />
               <Route path="inventory/products/add" element={<AddProduct />} />
               <Route path="inventory/categories" element={<Categories />} />
+
+               <Route path="chat" element={<ChatBotWidget />} />
+
               <Route
                 path="inventory/categories/add"
                 element={<AddCategory />}

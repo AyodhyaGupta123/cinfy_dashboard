@@ -1,17 +1,16 @@
 import React, { useState, useRef, useCallback } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import {
   BarChart2,
   FileText,
   AppWindow,
-  Bug,
   Wallet,
   ChevronRight,
   ChevronDown,
   Download,
   FileCode,
   Gift,
-  Globe,
   DollarSign,
   ArrowRightLeft,
   Settings,
@@ -24,7 +23,6 @@ import {
   LayoutList,
   Calendar,
   MessageSquare,
-  Bell,
   Table,
   PieChart,
   X,
@@ -33,14 +31,12 @@ import {
   PackageMinus,
   SlidersHorizontal,
   AlertTriangle,
+  Globe,
 } from "lucide-react";
 
 const EXPANDED_W = 256;
 const COLLAPSED_W = 72;
 
-/* ═══════════════════════════════════════
-   MENU CONFIGURATION (Dynamic Data)
-   ═══════════════════════════════════════ */
 const MENU_CONFIG = [
   {
     group: "Dashboard",
@@ -56,21 +52,32 @@ const MENU_CONFIG = [
       { name: "Products", path: "/inventory/products", icon: LayoutList },
       { name: "Categories", path: "/inventory/categories", icon: FolderTree },
       { name: "Stock In", path: "/inventory/stock-in", icon: PackagePlus },
-      { name: "Stock Out", path: "/inventory/stock-out",icon: PackageMinus },
-      { name: "Stock Adjustments", path: "/inventory/stock-adjustments", icon: SlidersHorizontal },
+      { name: "Stock Out", path: "/inventory/stock-out", icon: PackageMinus },
+      {
+        name: "Stock Adjustments",
+        path: "/inventory/stock-adjustments",
+        icon: SlidersHorizontal,
+      },
       { name: "Low Stock", path: "/inventory/low-stock", icon: AlertTriangle },
       { name: "Brands", path: "/inventory/brands", icon: PackagePlus },
       { name: "Warehouses", path: "/inventory/warehouses", icon: PackageMinus },
       { name: "Transfers", path: "/inventory/transfers", icon: ArrowRightLeft },
-      { name: "Orders", path: "/inventory/orders", icon: Receipt },
-      { name: "Refunds", path: "/inventory/refunds", icon: ArrowRightLeft },
-      { name: "Returns", path: "/inventory/returns", icon: ArrowRightLeft },
+      {
+        name: "Orders",
+        path: "/inventory/orders",
+        icon: Receipt,
+        children: [
+          { name: "All Orders", path: "/inventory/orders", icon: Receipt },
+          { name: "Returns", path: "/inventory/returns", icon: ArrowRightLeft },
+          { name: "Refunds", path: "/inventory/refunds", icon: ArrowRightLeft },
+        ],
+      },
     ],
   },
   {
     group: "Productivity",
     items: [
-      { name: "Kanban Board", path: "/kanban", icon: LayoutList },  
+      { name: "Kanban Board", path: "/kanban", icon: LayoutList },
       { name: "Calendar", path: "/calendar", icon: Calendar },
       { name: "Chat", path: "/chat", icon: MessageSquare },
     ],
@@ -128,13 +135,6 @@ const MENU_CONFIG = [
   },
 ];
 
-/* ═══════════════════════════════════════
-   HOVER POPUP (tooltip + flyout unified)
-   - Hover se show hota hai
-   - Bridge se stable rehta hai
-   - Delay se close hota hai (300ms grace)
-   - Links clickable hain (navigate karte hain)
-   ═══════════════════════════════════════ */
 const HoverPopup = ({ children, content, collapsed }) => {
   const [visible, setVisible] = useState(false);
   const timeoutRef = useRef(null);
@@ -160,7 +160,6 @@ const HoverPopup = ({ children, content, collapsed }) => {
 
       {visible && (
         <>
-          {/* Bridge: invisible area between icon and popup to maintain hover */}
           <div
             style={{
               position: "absolute",
@@ -172,7 +171,6 @@ const HoverPopup = ({ children, content, collapsed }) => {
             }}
           />
 
-          {/* Popup */}
           <div
             style={{
               position: "absolute",
@@ -191,7 +189,6 @@ const HoverPopup = ({ children, content, collapsed }) => {
             onMouseEnter={show}
             onMouseLeave={hide}
           >
-            {/* Arrow */}
             <div
               style={{
                 position: "absolute",
@@ -213,9 +210,6 @@ const HoverPopup = ({ children, content, collapsed }) => {
   );
 };
 
-/* ═══════════════════════════════════════
-   NAV ITEM STYLE
-   ═══════════════════════════════════════ */
 const getNavStyle = (isActive, collapsed) => ({
   display: "flex",
   alignItems: "center",
@@ -244,9 +238,6 @@ const getNavStyle = (isActive, collapsed) => ({
   fontWeight: isActive ? 600 : 400,
 });
 
-/* ═══════════════════════════════════════
-   SIDEBAR COMPONENT
-   ═══════════════════════════════════════ */
 const Sidebar = ({
   collapsed,
   onToggle,
@@ -256,8 +247,23 @@ const Sidebar = ({
 }) => {
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const location = useLocation();
+  const { user } = useAuth();
 
-  // On mobile, sidebar is always expanded width
+  const userName = user?.name || "User";
+  const userRole = user?.role || "User";
+  const userId = user?.id || user?._id || "N/A";
+  const userCompany = user?.company || "Inventory Manager";
+
+  const initials = userName
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const displayId = userId !== "N/A" ? String(userId).slice(-8) : "N/A";
+
   const effectiveCollapsed = isMobile ? false : collapsed;
   const w = effectiveCollapsed ? COLLAPSED_W : EXPANDED_W;
 
@@ -268,16 +274,15 @@ const Sidebar = ({
     now.toTimeString().split(" ")[0].slice(0, 5) +
     " GMT";
 
-  // Close mobile sidebar on navigation
+  const badgeText = userRole === "admin" ? "Inventory Manager" : userCompany;
+
   const handleNavClick = () => {
-    if (isMobile && onMobileClose) {
-      onMobileClose();
-    }
+    if (isMobile && onMobileClose) onMobileClose();
   };
 
-  /* ─── Hover Button ─── */
   const HoverBtn = ({ onClick, children, style: extraStyle }) => {
     const [h, setH] = useState(false);
+
     return (
       <button
         onClick={onClick}
@@ -306,36 +311,20 @@ const Sidebar = ({
     );
   };
 
-  /* ─── Render a single menu item ─── */
   const renderMenuItem = (item) => {
-    if (item.divider) {
-      return (
-        <div
-          key="divider"
-          style={{
-            margin: "12px 16px",
-            borderTop: "1px solid rgba(255,255,255,0.06)",
-          }}
-        />
-      );
-    }
-
     const hasChildren = item.children && item.children.length > 0;
     const isParentActive =
       hasChildren && location.pathname.startsWith(item.path);
     const isSubmenuOpen = openSubmenu === item.name;
 
-    /* ── COLLAPSED MODE ── */
     if (effectiveCollapsed) {
       if (hasChildren) {
-        // Flyout with clickable sub-links
         return (
           <HoverPopup
             key={item.name}
             collapsed={effectiveCollapsed}
             content={
               <div style={{ padding: "4px 0" }}>
-                {/* Title */}
                 <div
                   style={{
                     padding: "6px 14px 8px",
@@ -350,7 +339,7 @@ const Sidebar = ({
                 >
                   {item.name}
                 </div>
-                {/* Sub-links */}
+
                 {item.children.map((child) => (
                   <NavLink
                     key={child.name}
@@ -388,7 +377,6 @@ const Sidebar = ({
         );
       }
 
-      // Simple item with tooltip
       return (
         <HoverPopup
           key={item.name}
@@ -424,7 +412,6 @@ const Sidebar = ({
       );
     }
 
-    /* ── EXPANDED MODE ── */
     if (hasChildren) {
       return (
         <div key={item.name}>
@@ -439,6 +426,7 @@ const Sidebar = ({
               <item.icon style={{ width: 18, height: 18, flexShrink: 0 }} />
               <span>{item.name}</span>
             </div>
+
             {isSubmenuOpen || isParentActive ? (
               <ChevronDown style={{ width: 16, height: 16, opacity: 0.6 }} />
             ) : (
@@ -497,7 +485,6 @@ const Sidebar = ({
       );
     }
 
-    // Simple expanded item
     return (
       <NavLink
         key={item.name}
@@ -512,7 +499,6 @@ const Sidebar = ({
     );
   };
 
-  // Mobile: sidebar slides in/out as a drawer
   const sidebarStyle = isMobile
     ? {
         position: "fixed",
@@ -546,7 +532,6 @@ const Sidebar = ({
 
   return (
     <aside style={sidebarStyle}>
-      {/* ── Bottom Green Gradient Glow ── */}
       <div
         style={{
           position: "absolute",
@@ -561,7 +546,6 @@ const Sidebar = ({
         }}
       />
 
-      {/* ═══ LOGO ROW + COLLAPSE / CLOSE ═══ */}
       <div
         style={{
           padding: effectiveCollapsed ? "20px 12px 8px" : "20px 16px 8px",
@@ -598,6 +582,7 @@ const Sidebar = ({
               C
             </span>
           </div>
+
           {!effectiveCollapsed && (
             <span
               style={{
@@ -612,11 +597,13 @@ const Sidebar = ({
             </span>
           )}
         </div>
+
         {!effectiveCollapsed && !isMobile && (
           <HoverBtn onClick={onToggle}>
             <ChevronsLeft style={{ width: 14, height: 14 }} />
           </HoverBtn>
         )}
+
         {isMobile && (
           <button
             onClick={onMobileClose}
@@ -655,7 +642,6 @@ const Sidebar = ({
         </div>
       )}
 
-      {/* ═══ PUBLISHER BADGE ═══ */}
       <div
         style={{
           padding: effectiveCollapsed ? "16px 8px 0" : "16px 16px 0",
@@ -676,7 +662,7 @@ const Sidebar = ({
                   whiteSpace: "nowrap",
                 }}
               >
-                Inventory Manager
+                {badgeText}
               </div>
             }
           >
@@ -711,10 +697,12 @@ const Sidebar = ({
               >
                 <Globe style={{ width: 16, height: 16, color: "#fff" }} />
               </div>
+
               <span style={{ fontSize: 14, fontWeight: 600, color: "#000" }}>
-                Inventory Manager
+                {badgeText}
               </span>
             </div>
+
             <ChevronRight
               style={{ width: 16, height: 16, color: "rgba(0,0,0,0.5)" }}
             />
@@ -722,7 +710,6 @@ const Sidebar = ({
         )}
       </div>
 
-      {/* ═══ DYNAMIC NAV AREA ═══ */}
       <nav
         className={effectiveCollapsed ? "" : "sidebar-scroll"}
         style={{
@@ -763,11 +750,13 @@ const Sidebar = ({
                   {group.group}
                 </div>
               )}
+
               {group.items.map((item, itemIdx) => (
                 <React.Fragment key={item.name || itemIdx}>
                   {renderMenuItem(item)}
                 </React.Fragment>
               ))}
+
               {groupIdx < MENU_CONFIG.length - 1 && effectiveCollapsed && (
                 <div
                   style={{
@@ -781,7 +770,6 @@ const Sidebar = ({
         </div>
       </nav>
 
-      {/* ═══ USER PROFILE FOOTER ═══ */}
       <div
         style={{
           padding: effectiveCollapsed ? "8px" : "8px 16px 12px",
@@ -807,7 +795,7 @@ const Sidebar = ({
                   display: "block",
                 }}
               >
-                Ayodhya
+                {userName}
               </NavLink>
             }
           >
@@ -837,7 +825,7 @@ const Sidebar = ({
                   cursor: "pointer",
                 }}
               >
-                AJ
+                {initials || "U"}
               </div>
             </NavLink>
           </HoverPopup>
@@ -865,8 +853,9 @@ const Sidebar = ({
                     boxShadow: "0 0 12px rgba(3,217,133,0.3)",
                   }}
                 >
-                  AJ
+                  {initials || "U"}
                 </div>
+
                 <div
                   style={{
                     display: "flex",
@@ -892,8 +881,9 @@ const Sidebar = ({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      Ayodhya
+                      {userName}
                     </span>
+
                     <ChevronUp
                       style={{
                         width: 14,
@@ -903,12 +893,14 @@ const Sidebar = ({
                       }}
                     />
                   </div>
+
                   <span style={{ fontSize: 11, color: "#606060" }}>
-                    ID# 131364877
+                    ID# {displayId}
                   </span>
                 </div>
               </div>
             </NavLink>
+
             <div
               style={{
                 display: "flex",
