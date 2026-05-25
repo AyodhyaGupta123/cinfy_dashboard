@@ -1,21 +1,28 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, Warehouse } from "lucide-react";
 import Card from "../../../components/UI/Card";
 import Button from "../../../components/UI/Button";
 import Breadcrumb from "../../../components/UI/Breadcrumb";
+import { useToast } from "../../../components/UI/Toast";
+import api from "../../../services/api";
 
 const inputClass =
   "w-full h-11 rounded-xl border border-gray-200 bg-white px-4 text-gray-900 placeholder:text-gray-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
 
 const AddWarehouse = () => {
+  const navigate = useNavigate();
+  const toast = useToast();
+
+  const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "",
     code: "",
-    location: "",
-    manager: "",
-    capacity: "",
-    status: "Active",
+    city: "",
+    managerName: "",
+    phone: "",
+    status: "active",
     address: "",
   });
 
@@ -26,9 +33,36 @@ const AddWarehouse = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Warehouse Data:", formData);
+
+    if (!formData.name.trim()) {
+      toast.error("Validation Error", "Warehouse name is required.");
+      return;
+    }
+
+    if (!formData.code.trim()) {
+      toast.error("Validation Error", "Warehouse code is required.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await api.post("/warehouses", formData);
+
+      if (res.data.success) {
+        toast.success("Warehouse Created", "Warehouse added successfully.");
+        navigate("/inventory/warehouses");
+      }
+    } catch (error) {
+      toast.error(
+        "Create Failed",
+        error.response?.data?.message || "Something went wrong"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -37,7 +71,7 @@ const AddWarehouse = () => {
         items={[
           { label: "Dashboard", path: "/" },
           { label: "Warehouse" },
-          { label: "Warehouses", path: "/warehouse/warehouses" },
+          { label: "Warehouses", path: "/inventory/warehouses" },
           { label: "Add Warehouse" },
         ]}
       />
@@ -50,10 +84,12 @@ const AddWarehouse = () => {
           </p>
         </div>
 
-        <Button variant="outline">
-          <ArrowLeft size={18} />
-          Back to Warehouses
-        </Button>
+        <Link to="/inventory/warehouses">
+          <Button variant="outline">
+            <ArrowLeft size={18} />
+            Back to Warehouses
+          </Button>
+        </Link>
       </div>
 
       <Card className="p-5 bg-white">
@@ -62,6 +98,7 @@ const AddWarehouse = () => {
             <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
               <Warehouse size={22} />
             </div>
+
             <div>
               <h2 className="text-lg font-bold text-gray-900">
                 Warehouse Information
@@ -101,11 +138,11 @@ const AddWarehouse = () => {
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Location
+                City
               </label>
               <input
-                name="location"
-                value={formData.location}
+                name="city"
+                value={formData.city}
                 onChange={handleChange}
                 className={inputClass}
                 placeholder="Bhopal"
@@ -117,8 +154,8 @@ const AddWarehouse = () => {
                 Manager Name
               </label>
               <input
-                name="manager"
-                value={formData.manager}
+                name="managerName"
+                value={formData.managerName}
                 onChange={handleChange}
                 className={inputClass}
                 placeholder="Manager name"
@@ -127,14 +164,14 @@ const AddWarehouse = () => {
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Capacity
+                Phone
               </label>
               <input
-                name="capacity"
-                value={formData.capacity}
+                name="phone"
+                value={formData.phone}
                 onChange={handleChange}
                 className={inputClass}
-                placeholder="10000 Units"
+                placeholder="9876543210"
               />
             </div>
 
@@ -148,8 +185,8 @@ const AddWarehouse = () => {
                 onChange={handleChange}
                 className={inputClass}
               >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
               </select>
             </div>
 
@@ -169,7 +206,7 @@ const AddWarehouse = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row justify-end gap-3 pt-5 border-t border-gray-100">
-            <Link to="/warehouse/warehouses">
+            <Link to="/inventory/warehouses">
               <Button type="button" variant="outline">
                 Cancel
               </Button>
@@ -177,10 +214,11 @@ const AddWarehouse = () => {
 
             <Button
               type="submit"
+              disabled={loading}
               className="bg-emerald-500 hover:bg-emerald-600 text-white"
             >
               <Save size={18} />
-              Save Warehouse
+              {loading ? "Saving..." : "Save Warehouse"}
             </Button>
           </div>
         </form>

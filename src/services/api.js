@@ -29,34 +29,23 @@ api.interceptors.request.use(
 );
 
 // Response Interceptor
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    const status = error?.response?.status;
+api.interceptors.request.use(
+  (config) => {
+    const token =
+      localStorage.getItem("auth_token") ||
+      localStorage.getItem("token");
 
-    // Unauthorized
-    if (status === 401) {
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-
-      if (window.location.pathname !== "/login") {
-        window.location.href = "/login";
-      }
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Forbidden
-    if (status === 403) {
-      console.error("Access denied");
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
     }
 
-    // Server Error
-    if (status >= 500) {
-      console.error("Server error");
-    }
-
-    return Promise.reject(error);
-  }
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
 
 export default api;
@@ -131,3 +120,102 @@ export const updateOrderStatus = (id, data) =>
 
 export const deleteOrder = (id) =>
   api.delete(`/orders/${id}`);
+
+/* =========================
+   RETURN APIs
+========================= */
+
+export const getReturns = () =>
+  api.get("/returns");
+
+export const getReturnById = (id) =>
+  api.get(`/returns/${id}`);
+
+export const createReturn = (data) =>
+  api.post("/returns", data);
+
+export const updateReturnStatus = (id, data) =>
+  api.put(`/returns/${id}/status`, data);
+
+export const deleteReturn = (id) =>
+  api.delete(`/returns/${id}`);
+
+/* =========================
+   REFUND APIs
+========================= */
+
+export const getRefunds = () =>
+  api.get("/refunds");
+
+export const getRefundById = (id) =>
+  api.get(`/refunds/${id}`);
+
+export const createRefund = (data) =>
+  api.post("/refunds", data);
+
+export const updateRefundStatus = (id, data) =>
+  api.put(`/refunds/${id}/status`, data);
+
+export const deleteRefund = (id) =>
+  api.delete(`/refunds/${id}`);
+
+/* =========================
+   BRAND APIs
+========================= */
+
+export const getBrands = () =>
+  api.get("/brands");
+
+export const getBrandById = (id) =>
+  api.get(`/brands/${id}`);
+
+export const createBrand = (data) =>
+  api.post("/brands", data);
+
+export const updateBrand = (id, data) =>
+  api.put(`/brands/${id}`, data);
+
+export const deleteBrand = (id) =>
+  api.delete(`/brands/${id}`);
+
+
+
+/* ====================== 
+     Stock APIs
+========================= */
+
+export const getStockTransactions = (params) =>
+  api.get("/stock", { params });
+
+export const createStockIn = (data) =>
+  api.post("/stock/in", data);
+
+export const createStockOut = (data) =>
+  api.post("/stock/out", data);
+
+export const createStockAdjustment = (data) =>
+  api.post("/stock/adjustment", data);
+
+export const getLowStockProducts = () =>
+  api.get("/stock/low-stock");
+
+/* =========================
+   WAREHOUSE APIs
+========================= */
+
+export const getWarehouses = () => api.get("/warehouses");
+export const getWarehouseById = (id) => api.get(`/warehouses/${id}`);
+export const createWarehouse = (data) => api.post("/warehouses", data);
+export const updateWarehouse = (id, data) => api.put(`/warehouses/${id}`, data);
+export const deleteWarehouse = (id) => api.delete(`/warehouses/${id}`);
+
+/* =========================
+   TRANSFER APIs
+========================= */
+
+export const getTransfers = () => api.get("/transfers");
+export const getTransferById = (id) => api.get(`/transfers/${id}`);
+export const createTransfer = (data) => api.post("/transfers", data);
+export const updateTransferStatus = (id, data) =>
+  api.put(`/transfers/${id}/status`, data);
+export const deleteTransfer = (id) => api.delete(`/transfers/${id}`);

@@ -54,6 +54,9 @@ import Returns from "./pages/inventory/orders/Returns";
 import OrderDetails from "./pages/inventory/orders/OrderDetails";
 import RefundDetails from "./pages/inventory/orders/RefundDetails";
 import ReturnDetails from "./pages/inventory/orders/ReturnDetails";
+import EditBrand from "./pages/inventory/brands/EditBrand";
+import EditTransfer from "./pages/inventory/warehouse/transfers/EditTransfer";
+import TransferDetails from "./pages/inventory/warehouse/transfers/TransferDetails";
 
 function ScrollToTop() {
   useScrollToTop();
@@ -92,6 +95,10 @@ function App() {
               <Route path="inventory/products" element={<Products />} />
               <Route path="inventory/products/add" element={<AddProduct />} />
               <Route path="inventory/categories" element={<Categories />} />
+              <Route path="/inventory/brands/edit/:id" element={<EditBrand />} />
+              <Route path="/inventory/transfers/edit/:id" element={<EditTransfer />} />
+              <Route path="/inventory/transfers/:id" element={<TransferDetails />} />
+              
 
                <Route path="chat" element={<ChatBotWidget />} />
 

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save, Tags } from "lucide-react";
 import Card from "../../../components/UI/Card";
 import Button from "../../../components/UI/Button";
@@ -7,15 +7,26 @@ import Breadcrumb from "../../../components/UI/Breadcrumb";
 import { useToast } from "../../../components/UI/Toast";
 import api from "../../../services/api";
 
+const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
 const inputClass =
   "w-full h-11 rounded-xl border border-gray-200 bg-white px-4 text-gray-900 placeholder:text-gray-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
 
-const AddBrand = () => {
+const getImageUrl = (image) => {
+  if (!image) return "";
+  if (image.startsWith("http")) return image;
+  return `${API_URL}${image}`;
+};
+
+const EditBrand = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
 
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const [image, setImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -23,6 +34,38 @@ const AddBrand = () => {
     status: "active",
     description: "",
   });
+
+  const fetchBrand = async () => {
+    try {
+      setFetching(true);
+
+      const res = await api.get(`/brands/${id}`);
+
+      if (res.data.success) {
+        const brand = res.data.brand;
+
+        setFormData({
+          name: brand.name || "",
+          code: brand.code || "",
+          status: brand.status || "active",
+          description: brand.description || "",
+        });
+
+        setPreviewImage(brand.image ? getImageUrl(brand.image) : "");
+      }
+    } catch (error) {
+      toast.error(
+        "Failed",
+        error.response?.data?.message || "Failed to load brand"
+      );
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBrand();
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -44,6 +87,7 @@ const AddBrand = () => {
     }
 
     setImage(file);
+    setPreviewImage(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e) => {
@@ -72,21 +116,25 @@ const AddBrand = () => {
         form.append("image", image);
       }
 
-      const res = await api.post("/brands", form);
+      const res = await api.put(`/brands/${id}`, form);
 
       if (res.data.success) {
-        toast.success("Brand Created", "Brand added successfully.");
+        toast.success("Updated", "Brand updated successfully.");
         navigate("/inventory/brands");
       }
     } catch (error) {
       toast.error(
-        "Create Failed",
+        "Update Failed",
         error.response?.data?.message || "Something went wrong"
       );
     } finally {
       setLoading(false);
     }
   };
+
+  if (fetching) {
+    return <div className="p-6 text-gray-500">Loading brand...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -95,15 +143,15 @@ const AddBrand = () => {
           { label: "Dashboard", path: "/" },
           { label: "Inventory" },
           { label: "Brands", path: "/inventory/brands" },
-          { label: "Add Brand" },
+          { label: "Edit Brand" },
         ]}
       />
 
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Add Brand</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Edit Brand</h1>
           <p className="text-gray-500 mt-1">
-            Create a new brand for your inventory products.
+            Update brand details and image.
           </p>
         </div>
 
@@ -127,7 +175,7 @@ const AddBrand = () => {
                 Brand Information
               </h2>
               <p className="text-sm text-gray-500">
-                Fill brand name, code, image and status details.
+                Edit brand name, code, image and status details.
               </p>
             </div>
           </div>
@@ -180,6 +228,7 @@ const AddBrand = () => {
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Brand Image
               </label>
+
               <input
                 type="file"
                 accept="image/*"
@@ -187,9 +236,9 @@ const AddBrand = () => {
                 className={inputClass}
               />
 
-              {image && (
+              {previewImage && (
                 <img
-                  src={URL.createObjectURL(image)}
+                  src={previewImage}
                   alt="Preview"
                   className="mt-4 h-24 w-24 rounded-xl object-cover border border-gray-200"
                 />
@@ -200,6 +249,7 @@ const AddBrand = () => {
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Description
               </label>
+
               <textarea
                 name="description"
                 placeholder="Write brand description..."
@@ -224,7 +274,7 @@ const AddBrand = () => {
               className="bg-emerald-500 hover:bg-emerald-600 text-white"
             >
               <Save size={18} />
-              {loading ? "Saving..." : "Save Brand"}
+              {loading ? "Updating..." : "Update Brand"}
             </Button>
           </div>
         </form>
@@ -233,4 +283,4 @@ const AddBrand = () => {
   );
 };
 
-export default AddBrand;
+export default EditBrand;

@@ -32,7 +32,7 @@ const Products = () => {
     } catch (error) {
       toast.error(
         "Failed",
-        error.response?.data?.message || "Failed to load products"
+        error.response?.data?.message || "Failed to load products",
       );
     } finally {
       setLoading(false);
@@ -45,7 +45,7 @@ const Products = () => {
 
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
-      "Are you sure you want to delete this product?"
+      "Are you sure you want to delete this product?",
     );
 
     if (!confirmDelete) return;
@@ -60,7 +60,7 @@ const Products = () => {
     } catch (error) {
       toast.error(
         "Delete Failed",
-        error.response?.data?.message || "Something went wrong"
+        error.response?.data?.message || "Something went wrong",
       );
     }
   };
@@ -88,9 +88,9 @@ const Products = () => {
 
   const filteredProducts = useMemo(() => {
     return products.filter((item) => {
-      const value = `${item.name || ""} ${item.sku || ""} ${
-        item.brand || ""
-      } ${item.category || ""}`;
+      const value = `${item.name || ""} ${item.sku || ""} ${item.brand || ""} ${
+        item.category || ""
+      }`;
 
       return value.toLowerCase().includes(search.toLowerCase());
     });
@@ -100,17 +100,17 @@ const Products = () => {
     const total = products.length;
 
     const outOfStock = products.filter(
-      (p) => Number(p.currentStock || 0) <= 0
+      (p) => Number(p.currentStock || 0) <= 0,
     ).length;
 
     const lowStock = products.filter(
       (p) =>
         Number(p.currentStock || 0) > 0 &&
-        Number(p.currentStock || 0) <= Number(p.minStockLevel || 0)
+        Number(p.currentStock || 0) <= Number(p.minStockLevel || 0),
     ).length;
 
     const inStock = products.filter(
-      (p) => Number(p.currentStock || 0) > Number(p.minStockLevel || 0)
+      (p) => Number(p.currentStock || 0) > Number(p.minStockLevel || 0),
     ).length;
 
     return { total, inStock, lowStock, outOfStock };
@@ -184,7 +184,7 @@ const Products = () => {
           <div className="relative w-full lg:max-w-md">
             <Search
               size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
             />
 
             <input
@@ -192,7 +192,7 @@ const Products = () => {
               placeholder="Search product..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-11 rounded-xl border border-gray-200 pl-10 pr-4 outline-none focus:border-emerald-500"
+              className="w-full h-11 rounded-xl border border-gray-200 pl-10 pr-4 outline-none focus:border-emerald-500 text-gray-900 bg-white"
             />
           </div>
 
@@ -277,9 +277,7 @@ const Products = () => {
                         </div>
                       </td>
 
-                      <td className="px-4 py-4 text-gray-600">
-                        {product.sku}
-                      </td>
+                      <td className="px-4 py-4 text-gray-600">{product.sku}</td>
 
                       <td className="px-4 py-4 text-gray-600">
                         {product.category || "-"}
@@ -300,7 +298,7 @@ const Products = () => {
                       <td className="px-4 py-4">
                         <span
                           className={`inline-flex items-center px-3 py-1 rounded-full border text-xs font-semibold ${getStatusClass(
-                            status
+                            status,
                           )}`}
                         >
                           {status}
