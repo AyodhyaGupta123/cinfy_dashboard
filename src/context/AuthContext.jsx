@@ -54,8 +54,8 @@ export const AuthProvider = ({ children }) => {
 
         return {
           success: true,
-          message: res.data.message,
           user: res.data.user,
+          token: res.data.token,
         };
       }
 

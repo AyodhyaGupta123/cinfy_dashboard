@@ -32,6 +32,12 @@ import {
   SlidersHorizontal,
   AlertTriangle,
   Globe,
+  ShoppingCart,
+  PackageCheck,
+  ShieldCheck,
+  Building2,
+  FilePlus2,
+  UserPlus,
 } from "lucide-react";
 
 const EXPANDED_W = 256;
@@ -39,101 +45,329 @@ const COLLAPSED_W = 72;
 
 const MENU_CONFIG = [
   {
-    group: "Dashboard",
+    group: "Super Admin",
+    roles: ["super_admin"],
     items: [
-      { name: "Analytics", path: "/", icon: BarChart2, end: true },
-      { name: "Team / Users", path: "/users", icon: Users },
-      { name: "My Apps", path: "/applications", icon: AppWindow },
+      {
+        name: "Dashboard",
+        path: "/super-admin/dashboard",
+        icon: ShieldCheck,
+        roles: ["super_admin"],
+      },
+      {
+        name: "Companies",
+        path: "/super-admin/companies",
+        icon: Building2,
+        roles: ["super_admin"],
+      },
+    ],
+  },
+  {
+    group: "Dashboard",
+    roles: ["admin", "manager", "staff"],
+    items: [
+      {
+        name: "Analytics",
+        path: "/",
+        icon: BarChart2,
+        end: true,
+        roles: ["admin", "manager", "staff"],
+      },
+      {
+        name: "Team / Users",
+        path: "/users",
+        icon: Users,
+        roles: ["admin"],
+      },
+      {
+        name: "My Apps",
+        path: "/applications",
+        icon: AppWindow,
+        roles: ["admin", "manager"],
+      },
     ],
   },
   {
     group: "Inventory",
+    roles: ["admin", "manager", "staff"],
     items: [
-      { name: "Products", path: "/inventory/products", icon: LayoutList },
-      { name: "Categories", path: "/inventory/categories", icon: FolderTree },
-      { name: "Stock In", path: "/inventory/stock-in", icon: PackagePlus },
-      { name: "Stock Out", path: "/inventory/stock-out", icon: PackageMinus },
+      {
+        name: "Products",
+        path: "/inventory/products",
+        icon: LayoutList,
+        roles: ["admin", "manager", "staff"],
+      },
+      {
+        name: "Categories",
+        path: "/inventory/categories",
+        icon: FolderTree,
+        roles: ["admin", "manager"],
+      },
+      {
+        name: "Stock In",
+        path: "/inventory/stock-in",
+        icon: PackagePlus,
+        roles: ["admin", "manager", "staff"],
+      },
+      {
+        name: "Stock Out",
+        path: "/inventory/stock-out",
+        icon: PackageMinus,
+        roles: ["admin", "manager", "staff"],
+      },
       {
         name: "Stock Adjustments",
         path: "/inventory/stock-adjustments",
         icon: SlidersHorizontal,
+        roles: ["admin", "manager"],
       },
-      { name: "Low Stock", path: "/inventory/low-stock", icon: AlertTriangle },
-      { name: "Brands", path: "/inventory/brands", icon: PackagePlus },
-      { name: "Warehouses", path: "/inventory/warehouses", icon: PackageMinus },
-      { name: "Transfers", path: "/inventory/transfers", icon: ArrowRightLeft },
+      {
+        name: "Low Stock",
+        path: "/inventory/low-stock",
+        icon: AlertTriangle,
+        roles: ["admin", "manager", "staff"],
+      },
+      {
+        name: "Brands",
+        path: "/inventory/brands",
+        icon: PackagePlus,
+        roles: ["admin", "manager"],
+      },
+      {
+        name: "Warehouses",
+        path: "/inventory/warehouses",
+        icon: PackageMinus,
+        roles: ["admin", "manager"],
+      },
+      {
+        name: "Transfers",
+        path: "/inventory/transfers",
+        icon: ArrowRightLeft,
+        roles: ["admin", "manager"],
+      },
       {
         name: "Orders",
         path: "/inventory/orders",
         icon: Receipt,
+        roles: ["admin", "manager", "staff"],
         children: [
-          { name: "All Orders", path: "/inventory/orders", icon: Receipt },
-          { name: "Returns", path: "/inventory/returns", icon: ArrowRightLeft },
-          { name: "Refunds", path: "/inventory/refunds", icon: ArrowRightLeft },
+          {
+            name: "All Orders",
+            path: "/inventory/orders",
+            icon: Receipt,
+            roles: ["admin", "manager", "staff"],
+          },
+          {
+            name: "Returns",
+            path: "/inventory/returns",
+            icon: ArrowRightLeft,
+            roles: ["admin", "manager"],
+          },
+          {
+            name: "Refunds",
+            path: "/inventory/refunds",
+            icon: ArrowRightLeft,
+            roles: ["admin"],
+          },
         ],
       },
     ],
   },
   {
-    group: "Productivity",
+    group: "Purchases",
+    roles: ["admin", "manager"],
     items: [
-      { name: "Kanban Board", path: "/kanban", icon: LayoutList },
-      { name: "Calendar", path: "/calendar", icon: Calendar },
-      { name: "Chat", path: "/chat", icon: MessageSquare },
+      {
+        name: "Suppliers",
+        path: "/purchases/suppliers",
+        icon: Users,
+        end: true,
+        roles: ["admin", "manager"],
+      },
+      {
+        name: "Add Supplier",
+        path: "/purchases/suppliers/add",
+        icon: UserPlus,
+        end: true,
+        roles: ["admin"],
+      },
+      {
+        name: "Purchase Orders",
+        path: "/purchases/orders",
+        icon: ShoppingCart,
+        end: true,
+        roles: ["admin", "manager"],
+      },
+      {
+        name: "Create Purchase",
+        path: "/purchases/orders/create",
+        icon: FilePlus2,
+        end: true,
+        roles: ["admin", "manager"],
+      },
+      {
+        name: "Goods Received",
+        path: "/purchases/grn",
+        icon: PackageCheck,
+        roles: ["admin", "manager"],
+      },
+    ],
+  },
+  {
+    group: "Productivity",
+    roles: ["admin", "manager"],
+    items: [
+      {
+        name: "Kanban Board",
+        path: "/kanban",
+        icon: LayoutList,
+        roles: ["admin", "manager"],
+      },
+      {
+        name: "Calendar",
+        path: "/calendar",
+        icon: Calendar,
+        roles: ["admin", "manager"],
+      },
+      {
+        name: "Chat",
+        path: "/chat",
+        icon: MessageSquare,
+        roles: ["admin", "manager", "staff"],
+      },
     ],
   },
   {
     group: "Reporting",
+    roles: ["admin", "manager"],
     items: [
       {
         name: "Reports & Data",
         path: "/insights",
         icon: FileText,
+        roles: ["admin", "manager"],
         children: [
-          { name: "Data Tables", path: "/tables", icon: Table },
-          { name: "Charts Gallery", path: "/charts", icon: PieChart },
-          { name: "Custom Reports", path: "/reports", icon: FileText },
+          {
+            name: "Data Tables",
+            path: "/tables",
+            icon: Table,
+            roles: ["admin", "manager"],
+          },
+          {
+            name: "Charts Gallery",
+            path: "/charts",
+            icon: PieChart,
+            roles: ["admin", "manager"],
+          },
+          {
+            name: "Custom Reports",
+            path: "/reports",
+            icon: FileText,
+            roles: ["admin"],
+          },
         ],
       },
     ],
   },
   {
     group: "Payments",
+    roles: ["admin"],
     items: [
       {
         name: "My Finances",
         path: "/payments",
         icon: Wallet,
+        roles: ["admin"],
         children: [
-          { name: "Earnings", path: "/payments/earnings", icon: DollarSign },
+          {
+            name: "Earnings",
+            path: "/payments/earnings",
+            icon: DollarSign,
+            roles: ["admin"],
+          },
           {
             name: "Transactions",
             path: "/payments/transactions",
             icon: ArrowRightLeft,
+            roles: ["admin"],
           },
-          { name: "Invoices", path: "/payments/invoices", icon: Receipt },
-          { name: "Settings", path: "/payments/settings", icon: Settings },
+          {
+            name: "Invoices",
+            path: "/payments/invoices",
+            icon: Receipt,
+            roles: ["admin"],
+          },
+          {
+            name: "Settings",
+            path: "/payments/settings",
+            icon: Settings,
+            roles: ["admin"],
+          },
         ],
       },
     ],
   },
   {
     group: "More",
+    roles: ["admin", "manager", "staff"],
     items: [
       {
         name: "Resources",
         path: "/resources",
         icon: Download,
+        roles: ["admin", "manager"],
         children: [
-          { name: "Downloads", path: "/resources", icon: Download },
-          { name: "App-ads.txt", path: "/app-ads", icon: FileCode },
-          { name: "Referral Program", path: "/referral", icon: Gift },
+          {
+            name: "Downloads",
+            path: "/resources",
+            icon: Download,
+            roles: ["admin", "manager"],
+          },
+          {
+            name: "App-ads.txt",
+            path: "/app-ads",
+            icon: FileCode,
+            roles: ["admin"],
+          },
+          {
+            name: "Referral Program",
+            path: "/referral",
+            icon: Gift,
+            roles: ["admin"],
+          },
         ],
       },
-      { name: "Settings", path: "/settings", icon: Sliders },
+      {
+        name: "Settings",
+        path: "/settings",
+        icon: Sliders,
+        roles: ["admin"],
+      },
     ],
   },
 ];
+
+const hasAccess = (roles, userRole) => {
+  if (!roles || roles.length === 0) return true;
+  return roles.includes(userRole);
+};
+
+const getRoleBasedMenus = (menus, userRole) => {
+  return menus
+    .filter((group) => hasAccess(group.roles, userRole))
+    .map((group) => ({
+      ...group,
+      items: group.items
+        .filter((item) => hasAccess(item.roles, userRole))
+        .map((item) => ({
+          ...item,
+          children: item.children
+            ? item.children.filter((child) => hasAccess(child.roles, userRole))
+            : undefined,
+        })),
+    }))
+    .filter((group) => group.items.length > 0);
+};
 
 const HoverPopup = ({ children, content, collapsed }) => {
   const [visible, setVisible] = useState(false);
@@ -250,9 +484,11 @@ const Sidebar = ({
   const { user } = useAuth();
 
   const userName = user?.name || "User";
-  const userRole = user?.role || "User";
+  const userRole = user?.role || "staff";
   const userId = user?.id || user?._id || "N/A";
   const userCompany = user?.company || "Inventory Manager";
+
+  const roleBasedMenus = getRoleBasedMenus(MENU_CONFIG, userRole);
 
   const initials = userName
     .split(" ")
@@ -274,7 +510,12 @@ const Sidebar = ({
     now.toTimeString().split(" ")[0].slice(0, 5) +
     " GMT";
 
-  const badgeText = userRole === "admin" ? "Inventory Manager" : userCompany;
+  const badgeText =
+    userRole === "super_admin"
+      ? "Super Admin"
+      : userRole === "admin"
+      ? "Inventory Manager"
+      : userCompany;
 
   const handleNavClick = () => {
     if (isMobile && onMobileClose) onMobileClose();
@@ -579,7 +820,7 @@ const Sidebar = ({
             }}
           >
             <span style={{ color: "#000", fontWeight: 700, fontSize: 16 }}>
-              C
+              G
             </span>
           </div>
 
@@ -593,7 +834,7 @@ const Sidebar = ({
                 whiteSpace: "nowrap",
               }}
             >
-              cinfy<span style={{ color: "#03D985" }}>.io</span>
+              Generic<span style={{ color: "#03D985" }}>Inventory</span>
             </span>
           )}
         </div>
@@ -731,7 +972,7 @@ const Sidebar = ({
             padding: effectiveCollapsed ? "0 8px" : "0 12px",
           }}
         >
-          {MENU_CONFIG.map((group, groupIdx) => (
+          {roleBasedMenus.map((group, groupIdx) => (
             <div
               key={group.group || groupIdx}
               style={{ display: "flex", flexDirection: "column", gap: 2 }}
@@ -757,7 +998,7 @@ const Sidebar = ({
                 </React.Fragment>
               ))}
 
-              {groupIdx < MENU_CONFIG.length - 1 && effectiveCollapsed && (
+              {groupIdx < roleBasedMenus.length - 1 && effectiveCollapsed && (
                 <div
                   style={{
                     margin: "8px 12px",

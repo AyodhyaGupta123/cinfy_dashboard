@@ -13,7 +13,7 @@ import AppAdsTxt from "./pages/AppAdsTxt";
 import ReferralProgram from "./pages/ReferralProgram";
 import Profile from "./pages/Profile";
 import GeneralSettings from "./pages/GeneralSettings";
-import Users from "./pages/Users";
+import Users from "./pages/users/Users";
 import Invoices from "./pages/Invoices";
 import Login from "./pages/Login";
 import KanbanBoard from "./pages/KanbanBoard";
@@ -57,6 +57,19 @@ import ReturnDetails from "./pages/inventory/orders/ReturnDetails";
 import EditBrand from "./pages/inventory/brands/EditBrand";
 import EditTransfer from "./pages/inventory/warehouse/transfers/EditTransfer";
 import TransferDetails from "./pages/inventory/warehouse/transfers/TransferDetails";
+import SuperAdminDashboard from "./pages/super-admin/SuperAdminDashboard";
+import Companies from "./pages/super-admin/companies/Companies";
+import AddCompany from "./pages/super-admin/companies/AddCompany";
+import AddUser from "./pages/users/AddUser";
+import EditUser from "./pages/users/EditUser";
+
+import PurchaseOrders from "./pages/purchases/purchase-orders/PurchaseOrders";
+import CreatePurchase from "./pages/purchases/purchase-orders/CreatePurchase";
+import Suppliers from "./pages/purchases/suppliers/Suppliers";
+import AddSupplier from "./pages/purchases/suppliers/AddSupplier";
+import GoodsReceived from "./pages/purchases/grn/GoodsReceived";
+import PurchaseDetails from "./pages/purchases/purchase-orders/PurchaseDetails";
+import SupplierDetails from "./pages/purchases/suppliers/SupplierDetails";
 
 function ScrollToTop() {
   useScrollToTop();
@@ -76,7 +89,7 @@ function App() {
               <Route path="users" element={<Users />} />
               <Route path="kanban" element={<KanbanBoard />} />
               <Route path="calendar" element={<Calendar />} />
-              
+
               <Route path="notifications" element={<Notifications />} />
               <Route path="tables" element={<DataTables />} />
               <Route path="charts" element={<ChartsGallery />} />
@@ -95,12 +108,31 @@ function App() {
               <Route path="inventory/products" element={<Products />} />
               <Route path="inventory/products/add" element={<AddProduct />} />
               <Route path="inventory/categories" element={<Categories />} />
-              <Route path="/inventory/brands/edit/:id" element={<EditBrand />} />
-              <Route path="/inventory/transfers/edit/:id" element={<EditTransfer />} />
-              <Route path="/inventory/transfers/:id" element={<TransferDetails />} />
-              
+              <Route
+                path="/inventory/brands/edit/:id"
+                element={<EditBrand />}
+              />
+              <Route
+                path="/inventory/transfers/edit/:id"
+                element={<EditTransfer />}
+              />
+              <Route
+                path="/inventory/transfers/:id"
+                element={<TransferDetails />}
+              />
 
-               <Route path="chat" element={<ChatBotWidget />} />
+              <Route
+                path="/super-admin/dashboard"
+                element={<SuperAdminDashboard />}
+              />
+              <Route path="/super-admin/companies" element={<Companies />} />
+              <Route
+                path="/super-admin/companies/add"
+                element={<AddCompany />}
+              />
+
+              <Route path="chat" element={<Chat />} />
+              <Route path="chat-bot" element={<ChatBotWidget />} />
 
               <Route
                 path="inventory/categories/add"
@@ -133,50 +165,25 @@ function App() {
                 path="/inventory/stock-adjustments/add"
                 element={<AddAdjustment />}
               />
-              <Route
-                path="/inventory/low-stock"
-                element={<LowStock />}
-              />
-              <Route
-                path="/inventory/brands"
-                element={<Brands />}
-              />
-              <Route
-                path="/inventory/brands/add"
-                element={<AddBrand />}
-              />
-              <Route
-                path="/inventory/warehouses"
-                element={<Warehouses />}
-              />
+              <Route path="/inventory/low-stock" element={<LowStock />} />
+              <Route path="/inventory/brands" element={<Brands />} />
+              <Route path="/inventory/brands/add" element={<AddBrand />} />
+              <Route path="/inventory/warehouses" element={<Warehouses />} />
               <Route
                 path="/inventory/warehouses/add"
                 element={<AddWarehouse />}
               />
-              <Route
-                path="/inventory/transfers"
-                element={<Transfers />}
-              />
+              <Route path="/inventory/transfers" element={<Transfers />} />
               <Route
                 path="/inventory/transfers/create"
                 element={<CreateTransfer />}
               />
-              <Route
-                path="/inventory/orders"
-                element={<Orders />}
-              />
-              <Route
-                path="/inventory/refunds"
-                element={<Refunds />}
-              />
-              <Route
-                path="/inventory/returns"
-                element={<Returns />}
-              />
-              <Route
-                path="/inventory/orders/:id"
-                element={<OrderDetails />}
-              />
+              <Route path="/users/add" element={<AddUser />} />
+              <Route path="/users/edit/:id" element={<EditUser />} />
+              <Route path="/inventory/orders" element={<Orders />} />
+              <Route path="/inventory/refunds" element={<Refunds />} />
+              <Route path="/inventory/returns" element={<Returns />} />
+              <Route path="/inventory/orders/:id" element={<OrderDetails />} />
               <Route
                 path="/inventory/refunds/:id"
                 element={<RefundDetails />}
@@ -185,6 +192,20 @@ function App() {
                 path="/inventory/returns/:id"
                 element={<ReturnDetails />}
               />
+
+              <Route path="/purchases/orders" element={<PurchaseOrders />} />
+              <Route
+                path="/purchases/orders/create"
+                element={<CreatePurchase />}
+              />
+              <Route path="/purchases/suppliers" element={<Suppliers />} />
+              <Route path="/purchases/suppliers/add" element={<AddSupplier />} />
+              <Route path="/purchases/grn" element={<GoodsReceived />} />
+              <Route
+                path="/purchases/orders/:id"
+                element={<PurchaseDetails />}
+              />
+              <Route path="/purchases/suppliers/:id" element={<SupplierDetails />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
