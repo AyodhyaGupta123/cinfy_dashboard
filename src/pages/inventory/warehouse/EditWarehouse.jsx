@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save, Warehouse } from "lucide-react";
 import Card from "../../../components/UI/Card";
 import Button from "../../../components/UI/Button";
@@ -10,28 +10,56 @@ import api from "../../../services/api";
 const inputClass =
   "w-full h-11 rounded-xl border border-gray-200 bg-white px-4 text-gray-900 placeholder:text-gray-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
 
-const textareaClass =
-  "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 resize-none";
-
-const AddWarehouse = () => {
+const EditWarehouse = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
 
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
     code: "",
-    address: "",
     city: "",
-    state: "",
-    pinCode: "",
-    country: "",
-    contactNumber: "",
     managerName: "",
-    email: "",
+    phone: "",
     status: "active",
+    address: "",
   });
+
+  const fetchWarehouse = async () => {
+    try {
+      setFetchLoading(true);
+
+      const res = await api.get(`/warehouses/${id}`);
+
+      if (res.data.success) {
+        const warehouse = res.data.warehouse || res.data.data;
+
+        setFormData({
+          name: warehouse?.name || "",
+          code: warehouse?.code || "",
+          city: warehouse?.city || "",
+          managerName: warehouse?.managerName || "",
+          phone: warehouse?.phone || "",
+          status: warehouse?.status || "active",
+          address: warehouse?.address || "",
+        });
+      }
+    } catch (error) {
+      toast.error(
+        "Load Failed",
+        error.response?.data?.message || "Failed to load warehouse details."
+      );
+    } finally {
+      setFetchLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWarehouse();
+  }, [id]);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -56,21 +84,25 @@ const AddWarehouse = () => {
     try {
       setLoading(true);
 
-      const res = await api.post("/warehouses", formData);
+      const res = await api.put(`/warehouses/${id}`, formData);
 
       if (res.data.success) {
-        toast.success("Warehouse Created", "Warehouse added successfully.");
+        toast.success("Warehouse Updated", "Warehouse updated successfully.");
         navigate("/inventory/warehouses");
       }
     } catch (error) {
       toast.error(
-        "Create Failed",
+        "Update Failed",
         error.response?.data?.message || "Something went wrong"
       );
     } finally {
       setLoading(false);
     }
   };
+
+  if (fetchLoading) {
+    return <div className="p-6 text-gray-500">Loading warehouse...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -79,17 +111,15 @@ const AddWarehouse = () => {
           { label: "Dashboard", path: "/" },
           { label: "Warehouse" },
           { label: "Warehouses", path: "/inventory/warehouses" },
-          { label: "Add Warehouse" },
+          { label: "Edit Warehouse" },
         ]}
       />
 
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Add New Warehouse
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Edit Warehouse</h1>
           <p className="text-gray-500 mt-1">
-            Add a new warehouse or store location.
+            Update warehouse location, manager, contact, and status details.
           </p>
         </div>
 
@@ -110,10 +140,10 @@ const AddWarehouse = () => {
 
             <div>
               <h2 className="text-lg font-bold text-gray-900">
-                Add New Warehouse
+                Warehouse Information
               </h2>
               <p className="text-sm text-gray-500">
-                Add a new warehouse or store location.
+                Edit warehouse basic and location details.
               </p>
             </div>
           </div>
@@ -121,108 +151,40 @@ const AddWarehouse = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Warehouse Name <span className="text-red-500">*</span>
+                Warehouse Name
               </label>
               <input
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
                 className={inputClass}
-                placeholder="Enter warehouse name"
+                placeholder="Main Warehouse"
               />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Warehouse Code <span className="text-red-500">*</span>
+                Warehouse Code
               </label>
               <input
                 name="code"
                 value={formData.code}
                 onChange={handleChange}
                 className={inputClass}
-                placeholder="Enter code (e.g., WH001)"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Address <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                rows={3}
-                className={textareaClass}
-                placeholder="Enter full address"
+                placeholder="WH-001"
               />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                City <span className="text-red-500">*</span>
+                City
               </label>
               <input
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
                 className={inputClass}
-                placeholder="Enter city"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                State <span className="text-red-500">*</span>
-              </label>
-              <input
-                name="state"
-                value={formData.state}
-                onChange={handleChange}
-                className={inputClass}
-                placeholder="Enter state"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                PIN Code <span className="text-red-500">*</span>
-              </label>
-              <input
-                name="pinCode"
-                value={formData.pinCode}
-                onChange={handleChange}
-                className={inputClass}
-                placeholder="Enter pin code"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Country <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="country"
-                value={formData.country}
-                onChange={handleChange}
-                className={inputClass}
-              >
-                <option value="">Select country</option>
-                <option value="India">India</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Contact Number
-              </label>
-              <input
-                name="contactNumber"
-                value={formData.contactNumber}
-                onChange={handleChange}
-                className={inputClass}
-                placeholder="Enter contact number"
+                placeholder="Bhopal"
               />
             </div>
 
@@ -235,21 +197,49 @@ const AddWarehouse = () => {
                 value={formData.managerName}
                 onChange={handleChange}
                 className={inputClass}
-                placeholder="Enter manager name"
+                placeholder="Manager name"
               />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Email
+                Phone
               </label>
               <input
-                type="email"
-                name="email"
-                value={formData.email}
+                name="phone"
+                value={formData.phone}
                 onChange={handleChange}
                 className={inputClass}
-                placeholder="Enter email address"
+                placeholder="9876543210"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Status
+              </label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className={inputClass}
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Address
+              </label>
+              <textarea
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                rows={4}
+                className={`${inputClass} h-auto py-3 resize-none`}
+                placeholder="Full warehouse address..."
               />
             </div>
           </div>
@@ -267,7 +257,7 @@ const AddWarehouse = () => {
               className="bg-emerald-500 hover:bg-emerald-600 text-white"
             >
               <Save size={18} />
-              {loading ? "Saving..." : "Save Warehouse"}
+              {loading ? "Updating..." : "Update Warehouse"}
             </Button>
           </div>
         </form>
@@ -276,4 +266,4 @@ const AddWarehouse = () => {
   );
 };
 
-export default AddWarehouse;
+export default EditWarehouse;

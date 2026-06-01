@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Save, FolderPen } from "lucide-react";
+import { ArrowLeft, Save, FolderTree, Upload } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Card from "../../../components/UI/Card";
 import Button from "../../../components/UI/Button";
@@ -34,8 +34,6 @@ const EditCategory = () => {
   const [formData, setFormData] = useState({
     name: "",
     parentCategory: "",
-    code: "",
-    status: "active",
     description: "",
   });
 
@@ -44,23 +42,18 @@ const EditCategory = () => {
       setFetching(true);
 
       const res = await api.get(`/categories/${id}`);
+      const category = res.data.category || res.data;
 
-      if (res.data.success) {
-        const category = res.data.category;
+      setFormData({
+        name: category.name || "",
+        parentCategory: category.parentCategory || "",
+        description: category.description || "",
+      });
 
-        setFormData({
-          name: category.name || "",
-          parentCategory: category.parentCategory || "",
-          code: category.code || "",
-          status: category.status || "active",
-          description: category.description || "",
-        });
-
-        setPreviewImage(category.image ? getImageUrl(category.image) : "");
-      }
+      setPreviewImage(category.image ? getImageUrl(category.image) : "");
     } catch (error) {
       toast.error(
-        "Failed",
+        "Load Failed",
         error.response?.data?.message || "Failed to load category"
       );
     } finally {
@@ -74,7 +67,11 @@ const EditCategory = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleImageChange = (e) => {
@@ -84,6 +81,11 @@ const EditCategory = () => {
 
     if (!file.type.startsWith("image/")) {
       toast.error("Invalid File", "Please select only image file.");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("File Too Large", "Image size should be less than 2MB.");
       return;
     }
 
@@ -103,10 +105,9 @@ const EditCategory = () => {
       setLoading(true);
 
       const form = new FormData();
-
-      Object.keys(formData).forEach((key) => {
-        form.append(key, formData[key]);
-      });
+      form.append("name", formData.name);
+      form.append("parentCategory", formData.parentCategory);
+      form.append("description", formData.description);
 
       if (image) {
         form.append("image", image);
@@ -119,7 +120,7 @@ const EditCategory = () => {
       });
 
       if (res.data.success) {
-        toast.success("Updated", "Category updated successfully.");
+        toast.success("Category Updated", "Category updated successfully.");
         navigate("/inventory/categories");
       }
     } catch (error) {
@@ -151,7 +152,7 @@ const EditCategory = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Edit Category</h1>
           <p className="text-gray-500 mt-1">
-            Update category details. Category ID: {id}
+            Update category details for your products.
           </p>
         </div>
 
@@ -166,86 +167,98 @@ const EditCategory = () => {
       <Card className="p-6 bg-white">
         <div className="flex items-center gap-3 mb-6">
           <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
-            <FolderPen size={22} />
+            <FolderTree size={22} />
           </div>
+
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
-              Category Information
+              Edit Category
             </h2>
             <p className="text-sm text-gray-500">
-              Edit category name, parent category, code, image and status.
+              Update category for your products.
             </p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div>
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 md:grid-cols-2 gap-5"
+        >
+          <div className="md:col-span-2">
             <label className="text-sm font-medium text-gray-700">
-              Category Name
+              Category Name <span className="text-red-500">*</span>
             </label>
+
             <input
               type="text"
               name="name"
+              placeholder="Enter category name"
               value={formData.name}
               onChange={handleChange}
               className={inputClass}
             />
           </div>
 
-          <div>
+          <div className="md:col-span-2">
             <label className="text-sm font-medium text-gray-700">
-              Parent Category
+              Parent Category{" "}
+              <span className="text-gray-400">(Optional)</span>
             </label>
+
             <select
               name="parentCategory"
               value={formData.parentCategory}
               onChange={handleChange}
               className={inputClass}
             >
-              <option value="">No parent category</option>
+              <option value="">Select parent category</option>
               <option value="fashion">Fashion</option>
               <option value="electronics">Electronics</option>
               <option value="grocery">Grocery</option>
             </select>
-          </div>
 
-          <div>
-            <label className="text-sm font-medium text-gray-700">
-              Category Code
-            </label>
-            <input
-              type="text"
-              name="code"
-              value={formData.code}
-              onChange={handleChange}
-              className={inputClass}
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-gray-700">Status</label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className={inputClass}
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+            <p className="mt-2 text-sm text-gray-500">
+              Leave empty if this is a top-level category
+            </p>
           </div>
 
           <div className="md:col-span-2">
             <label className="text-sm font-medium text-gray-700">
-              Category Image
+              Description
             </label>
 
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className={inputClass}
+            <textarea
+              rows="4"
+              name="description"
+              placeholder="Enter category description (optional)"
+              value={formData.description}
+              onChange={handleChange}
+              className={textareaClass}
             />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="text-sm font-medium text-gray-700">
+              Category Image{" "}
+              <span className="text-gray-400">(Optional)</span>
+            </label>
+
+            <label className="mt-2 flex min-h-[110px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white px-4 text-center hover:border-emerald-400 hover:bg-emerald-50/40">
+              <input
+                type="file"
+                accept=".jpg,.jpeg,.png,image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+
+              <Upload size={28} className="mb-2 text-black" />
+              <p className="text-sm font-semibold text-black">
+                Upload Image
+              </p>
+              <p className="mt-1 text-xs text-gray-500">
+                JPG, PNG (Max. 2MB)
+              </p>
+            </label>
 
             {previewImage && (
               <img
@@ -256,22 +269,13 @@ const EditCategory = () => {
             )}
           </div>
 
-          <div className="md:col-span-2">
-            <label className="text-sm font-medium text-gray-700">
-              Description
-            </label>
-            <textarea
-              rows="4"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              className={textareaClass}
-            />
-          </div>
-
           <div className="md:col-span-2 flex flex-col sm:flex-row justify-end gap-3 pt-4">
             <Link to="/inventory/categories">
-              <Button variant="outline" type="button" className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                type="button"
+                className="w-full sm:w-auto"
+              >
                 Cancel
               </Button>
             </Link>

@@ -2,42 +2,30 @@ import React, { useState, useRef, useCallback } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
-  BarChart2,
-  FileText,
-  AppWindow,
-  Wallet,
-  ChevronRight,
-  ChevronDown,
-  Download,
-  FileCode,
-  Gift,
-  DollarSign,
+  LayoutDashboard,
+  Package,
+  FolderTree,
+  Tags,
+  Ruler,
+  SlidersHorizontal,
+  Boxes,
+  ShoppingCart,
+  ClipboardList,
+  RotateCcw,
   ArrowRightLeft,
+  Users,
+  Truck,
+  BarChart3,
   Settings,
-  ChevronUp,
+  Warehouse,
+  Percent,
   ChevronsLeft,
   ChevronsRight,
-  Sliders,
-  Users,
-  Receipt,
-  LayoutList,
-  Calendar,
-  MessageSquare,
-  Table,
-  PieChart,
+  ChevronUp,
+  ChevronRight,
+  ChevronDown,
   X,
-  FolderTree,
-  PackagePlus,
-  PackageMinus,
-  SlidersHorizontal,
-  AlertTriangle,
   Globe,
-  ShoppingCart,
-  PackageCheck,
-  ShieldCheck,
-  Building2,
-  FilePlus2,
-  UserPlus,
 } from "lucide-react";
 
 const EXPANDED_W = 256;
@@ -45,99 +33,155 @@ const COLLAPSED_W = 72;
 
 const MENU_CONFIG = [
   {
-    group: "Super Admin",
-    roles: ["super_admin"],
-    items: [
-      {
-        name: "Dashboard",
-        path: "/super-admin/dashboard",
-        icon: ShieldCheck,
-        roles: ["super_admin"],
-      },
-      {
-        name: "Companies",
-        path: "/super-admin/companies",
-        icon: Building2,
-        roles: ["super_admin"],
-      },
-    ],
-  },
-  {
-    group: "Dashboard",
+    group: "InventoryPro",
     roles: ["admin", "manager", "staff"],
     items: [
       {
-        name: "Analytics",
+        name: "Dashboard",
         path: "/",
-        icon: BarChart2,
+        icon: LayoutDashboard,
         end: true,
         roles: ["admin", "manager", "staff"],
       },
       {
-        name: "Team / Users",
-        path: "/users",
-        icon: Users,
-        roles: ["admin"],
-      },
-      {
-        name: "My Apps",
-        path: "/applications",
-        icon: AppWindow,
-        roles: ["admin", "manager"],
-      },
-    ],
-  },
-  {
-    group: "Inventory",
-    roles: ["admin", "manager", "staff"],
-    items: [
-      {
         name: "Products",
         path: "/inventory/products",
-        icon: LayoutList,
+        icon: Package,
         roles: ["admin", "manager", "staff"],
       },
       {
         name: "Categories",
         path: "/inventory/categories",
         icon: FolderTree,
-        roles: ["admin", "manager"],
-      },
-      {
-        name: "Stock In",
-        path: "/inventory/stock-in",
-        icon: PackagePlus,
         roles: ["admin", "manager", "staff"],
-      },
-      {
-        name: "Stock Out",
-        path: "/inventory/stock-out",
-        icon: PackageMinus,
-        roles: ["admin", "manager", "staff"],
-      },
-      {
-        name: "Stock Adjustments",
-        path: "/inventory/stock-adjustments",
-        icon: SlidersHorizontal,
-        roles: ["admin", "manager"],
-      },
-      {
-        name: "Low Stock",
-        path: "/inventory/low-stock",
-        icon: AlertTriangle,
-        roles: ["admin", "manager", "staff"],
+        children: [
+          {
+            name: "Category List",
+            path: "/inventory/categories",
+            icon: FolderTree,
+            end: true,
+            roles: ["admin", "manager", "staff"],
+          },
+          {
+            name: "Add Category",
+            path: "/inventory/categories/add",
+            icon: FolderTree,
+            roles: ["admin", "manager"],
+          },
+          {
+            name: "Sub Categories",
+            path: "/inventory/subcategories",
+            icon: FolderTree,
+            roles: ["admin", "manager", "staff"],
+          },
+          {
+            name: "Add Sub Category",
+            path: "/inventory/categories/add-subcategory",
+            icon: FolderTree,
+            roles: ["admin", "manager"],
+          },
+        ],
       },
       {
         name: "Brands",
         path: "/inventory/brands",
-        icon: PackagePlus,
+        icon: Tags,
+        roles: ["admin", "manager", "staff"],
+      },
+      {
+        name: "Units",
+        path: "/inventory/units",
+        icon: Ruler,
         roles: ["admin", "manager"],
       },
       {
-        name: "Warehouses",
-        path: "/inventory/warehouses",
-        icon: PackageMinus,
+        name: "Taxes",
+        path: "/inventory/taxes",
+        icon: Percent,
         roles: ["admin", "manager"],
+      },
+      {
+        name: "Attributes",
+        path: "/inventory/attributes",
+        icon: SlidersHorizontal,
+        roles: ["admin", "manager"],
+      },
+      {
+        name: "Inventory",
+        path: "/inventory/stock-in",
+        icon: Boxes,
+        roles: ["admin", "manager", "staff"],
+        children: [
+          {
+            name: "Stock In",
+            path: "/inventory/stock-in",
+            icon: Boxes,
+            roles: ["admin", "manager", "staff"],
+          },
+          {
+            name: "Stock Out",
+            path: "/inventory/stock-out",
+            icon: Boxes,
+            roles: ["admin", "manager", "staff"],
+          },
+          {
+            name: "Stock Adjustments",
+            path: "/inventory/stock-adjustments",
+            icon: SlidersHorizontal,
+            roles: ["admin", "manager"],
+          },
+          {
+            name: "Low Stock",
+            path: "/inventory/low-stock",
+            icon: Boxes,
+            roles: ["admin", "manager", "staff"],
+          },
+          {
+            name: "Warehouses",
+            path: "/inventory/warehouses",
+            icon: Warehouse,
+            roles: ["admin", "manager"],
+          },
+        ],
+      },
+      {
+        name: "Purchase",
+        path: "/purchases/orders",
+        icon: ShoppingCart,
+        roles: ["admin", "manager"],
+        children: [
+          {
+            name: "Purchase Orders",
+            path: "/purchases/orders",
+            icon: ShoppingCart,
+            end: true,
+            roles: ["admin", "manager"],
+          },
+          {
+            name: "Create Purchase",
+            path: "/purchases/orders/create",
+            icon: ClipboardList,
+            roles: ["admin", "manager"],
+          },
+          {
+            name: "Goods Received",
+            path: "/purchases/grn",
+            icon: Boxes,
+            roles: ["admin", "manager"],
+          },
+        ],
+      },
+      {
+        name: "Sales",
+        path: "/inventory/orders",
+        icon: ClipboardList,
+        roles: ["admin", "manager", "staff"],
+      },
+      {
+        name: "Returns",
+        path: "/inventory/returns",
+        icon: RotateCcw,
+        roles: ["admin", "manager", "staff"],
       },
       {
         name: "Transfers",
@@ -146,201 +190,27 @@ const MENU_CONFIG = [
         roles: ["admin", "manager"],
       },
       {
-        name: "Orders",
-        path: "/inventory/orders",
-        icon: Receipt,
-        roles: ["admin", "manager", "staff"],
-        children: [
-          {
-            name: "All Orders",
-            path: "/inventory/orders",
-            icon: Receipt,
-            roles: ["admin", "manager", "staff"],
-          },
-          {
-            name: "Returns",
-            path: "/inventory/returns",
-            icon: ArrowRightLeft,
-            roles: ["admin", "manager"],
-          },
-          {
-            name: "Refunds",
-            path: "/inventory/refunds",
-            icon: ArrowRightLeft,
-            roles: ["admin"],
-          },
-        ],
+        name: "Users",
+        path: "/users",
+        icon: Users,
+        roles: ["admin"],
       },
-    ],
-  },
-  {
-    group: "Purchases",
-    roles: ["admin", "manager"],
-    items: [
       {
         name: "Suppliers",
         path: "/purchases/suppliers",
-        icon: Users,
-        end: true,
+        icon: Truck,
         roles: ["admin", "manager"],
       },
       {
-        name: "Add Supplier",
-        path: "/purchases/suppliers/add",
-        icon: UserPlus,
-        end: true,
-        roles: ["admin"],
-      },
-      {
-        name: "Purchase Orders",
-        path: "/purchases/orders",
-        icon: ShoppingCart,
-        end: true,
+        name: "Reports",
+        path: "/reports",
+        icon: BarChart3,
         roles: ["admin", "manager"],
-      },
-      {
-        name: "Create Purchase",
-        path: "/purchases/orders/create",
-        icon: FilePlus2,
-        end: true,
-        roles: ["admin", "manager"],
-      },
-      {
-        name: "Goods Received",
-        path: "/purchases/grn",
-        icon: PackageCheck,
-        roles: ["admin", "manager"],
-      },
-    ],
-  },
-  {
-    group: "Productivity",
-    roles: ["admin", "manager"],
-    items: [
-      {
-        name: "Kanban Board",
-        path: "/kanban",
-        icon: LayoutList,
-        roles: ["admin", "manager"],
-      },
-      {
-        name: "Calendar",
-        path: "/calendar",
-        icon: Calendar,
-        roles: ["admin", "manager"],
-      },
-      {
-        name: "Chat",
-        path: "/chat",
-        icon: MessageSquare,
-        roles: ["admin", "manager", "staff"],
-      },
-    ],
-  },
-  {
-    group: "Reporting",
-    roles: ["admin", "manager"],
-    items: [
-      {
-        name: "Reports & Data",
-        path: "/insights",
-        icon: FileText,
-        roles: ["admin", "manager"],
-        children: [
-          {
-            name: "Data Tables",
-            path: "/tables",
-            icon: Table,
-            roles: ["admin", "manager"],
-          },
-          {
-            name: "Charts Gallery",
-            path: "/charts",
-            icon: PieChart,
-            roles: ["admin", "manager"],
-          },
-          {
-            name: "Custom Reports",
-            path: "/reports",
-            icon: FileText,
-            roles: ["admin"],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    group: "Payments",
-    roles: ["admin"],
-    items: [
-      {
-        name: "My Finances",
-        path: "/payments",
-        icon: Wallet,
-        roles: ["admin"],
-        children: [
-          {
-            name: "Earnings",
-            path: "/payments/earnings",
-            icon: DollarSign,
-            roles: ["admin"],
-          },
-          {
-            name: "Transactions",
-            path: "/payments/transactions",
-            icon: ArrowRightLeft,
-            roles: ["admin"],
-          },
-          {
-            name: "Invoices",
-            path: "/payments/invoices",
-            icon: Receipt,
-            roles: ["admin"],
-          },
-          {
-            name: "Settings",
-            path: "/payments/settings",
-            icon: Settings,
-            roles: ["admin"],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    group: "More",
-    roles: ["admin", "manager", "staff"],
-    items: [
-      {
-        name: "Resources",
-        path: "/resources",
-        icon: Download,
-        roles: ["admin", "manager"],
-        children: [
-          {
-            name: "Downloads",
-            path: "/resources",
-            icon: Download,
-            roles: ["admin", "manager"],
-          },
-          {
-            name: "App-ads.txt",
-            path: "/app-ads",
-            icon: FileCode,
-            roles: ["admin"],
-          },
-          {
-            name: "Referral Program",
-            path: "/referral",
-            icon: Gift,
-            roles: ["admin"],
-          },
-        ],
       },
       {
         name: "Settings",
         path: "/settings",
-        icon: Sliders,
+        icon: Settings,
         roles: ["admin"],
       },
     ],
@@ -367,6 +237,11 @@ const getRoleBasedMenus = (menus, userRole) => {
         })),
     }))
     .filter((group) => group.items.length > 0);
+};
+
+const isPathActive = (pathname, path, end) => {
+  if (end) return pathname === path;
+  return pathname === path || pathname.startsWith(`${path}/`);
 };
 
 const HoverPopup = ({ children, content, collapsed }) => {
@@ -554,8 +429,13 @@ const Sidebar = ({
 
   const renderMenuItem = (item) => {
     const hasChildren = item.children && item.children.length > 0;
+
     const isParentActive =
-      hasChildren && location.pathname.startsWith(item.path);
+      hasChildren &&
+      item.children.some((child) =>
+        isPathActive(location.pathname, child.path, child.end),
+      );
+
     const isSubmenuOpen = openSubmenu === item.name;
 
     if (effectiveCollapsed) {
@@ -585,6 +465,7 @@ const Sidebar = ({
                   <NavLink
                     key={child.name}
                     to={child.path}
+                    end={child.end}
                     onClick={handleNavClick}
                     style={({ isActive }) => ({
                       display: "flex",
@@ -694,6 +575,7 @@ const Sidebar = ({
                 <NavLink
                   key={child.name}
                   to={child.path}
+                  end={child.end}
                   onClick={handleNavClick}
                   style={({ isActive }) => ({
                     display: "flex",
@@ -834,7 +716,7 @@ const Sidebar = ({
                 whiteSpace: "nowrap",
               }}
             >
-              Generic<span style={{ color: "#03D985" }}>Inventory</span>
+              <span style={{ color: "#03D985" }}>Inventory</span>
             </span>
           )}
         </div>

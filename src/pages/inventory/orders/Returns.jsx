@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Search, Download, RotateCcw, Eye } from "lucide-react";
+import { Search, Download, RotateCcw, Eye, CheckCircle, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import Card from "../../../components/UI/Card";
 import Button from "../../../components/UI/Button";
@@ -27,7 +27,7 @@ const Returns = () => {
     } catch (error) {
       toast.error(
         "Failed",
-        error.response?.data?.message || "Failed to load returns"
+        error.response?.data?.message || "Failed to load stock returns"
       );
     } finally {
       setLoading(false);
@@ -40,9 +40,19 @@ const Returns = () => {
 
   const filteredReturns = useMemo(() => {
     return returns.filter((item) => {
-      const value = `${item.returnNumber || ""} ${
-        item.order?.orderNumber || ""
-      } ${item.order?.customerName || ""} ${item.reason || ""}`;
+      const orderNo = item.issueOrder?.orderNumber || item.order?.orderNumber || "";
+      const department =
+        item.issueOrder?.department ||
+        item.department ||
+        item.clientName ||
+        "";
+      const warehouse =
+        item.warehouse?.name ||
+        item.issueOrder?.warehouse?.name ||
+        item.warehouseName ||
+        "";
+
+      const value = `${item.returnNumber || ""} ${orderNo} ${department} ${warehouse} ${item.reason || ""}`;
 
       return value.toLowerCase().includes(search.toLowerCase());
     });
@@ -50,30 +60,35 @@ const Returns = () => {
 
   const stats = useMemo(() => {
     const total = returns.length;
-    const approved = returns.filter((item) =>
-      ["approved", "received", "completed"].includes(item.status)
-    ).length;
-    const pending = returns.filter((item) => item.status === "requested").length;
 
-    return { total, approved, pending };
+    const received = returns.filter((item) =>
+      ["approved", "received", "completed"].includes(
+        String(item.status || "").toLowerCase()
+      )
+    ).length;
+
+    const pending = returns.filter((item) =>
+      ["requested", "pending"].includes(String(item.status || "").toLowerCase())
+    ).length;
+
+    return { total, received, pending };
   }, [returns]);
 
-  const formatDate = (date) => {
-    if (!date) return "-";
-
-    return new Date(date).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+  const getTotalQty = (items = []) => {
+    return items.reduce(
+      (sum, item) => sum + Number(item.quantity || item.qty || 0),
+      0
+    );
   };
 
-  const getStatusClass = (status) => {
-    if (["approved", "received", "completed"].includes(status)) {
+  const getStatusClass = (status = "") => {
+    const value = status.toLowerCase();
+
+    if (["approved", "received", "completed"].includes(value)) {
       return "bg-emerald-50 text-emerald-600 border-emerald-100";
     }
 
-    if (status === "rejected") {
+    if (value === "rejected" || value === "cancelled") {
       return "bg-red-50 text-red-600 border-red-100";
     }
 
@@ -82,13 +97,29 @@ const Returns = () => {
 
   const exportReturns = () => {
     const rows = [
-      ["Return ID", "Order ID", "Customer", "Reason", "Date", "Status"],
+      [
+        "Return No",
+        "Issue Order No",
+        "Department / Client",
+        "Warehouse",
+        "Items",
+        "Total Qty",
+        "Reason",
+        "Date",
+        "Status",
+      ],
       ...filteredReturns.map((item) => [
         item.returnNumber || "",
-        item.order?.orderNumber || "",
-        item.order?.customerName || "",
+        item.issueOrder?.orderNumber || item.order?.orderNumber || "",
+        item.issueOrder?.department || item.department || item.clientName || "",
+        item.warehouse?.name ||
+          item.issueOrder?.warehouse?.name ||
+          item.warehouseName ||
+          "",
+        item.items?.length || 0,
+        getTotalQty(item.items || []),
         item.reason || "",
-        formatDate(item.createdAt),
+        formatDate(item.createdAt || item.returnDate),
         item.status || "",
       ]),
     ];
@@ -99,7 +130,7 @@ const Returns = () => {
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = "returns.csv";
+    a.download = "stock-returns.csv";
     a.click();
 
     window.URL.revokeObjectURL(url);
@@ -111,14 +142,14 @@ const Returns = () => {
         items={[
           { label: "Dashboard", path: "/" },
           { label: "Orders" },
-          { label: "Returns" },
+          { label: "Stock Returns" },
         ]}
       />
 
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Returns</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Stock Returns</h1>
         <p className="text-gray-500 mt-1">
-          Review return requests and manage returned products.
+          Manage returned stock from departments, clients, or issue orders.
         </p>
       </div>
 
@@ -129,7 +160,7 @@ const Returns = () => {
               <RotateCcw size={22} />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Returns</p>
+              <p className="text-sm text-gray-500">Total Stock Returns</p>
               <h3 className="text-2xl font-bold text-gray-900">
                 {stats.total}
               </h3>
@@ -138,17 +169,31 @@ const Returns = () => {
         </Card>
 
         <Card className="p-5 bg-white">
-          <p className="text-sm text-gray-500">Approved</p>
-          <h3 className="text-2xl font-bold text-emerald-600">
-            {stats.approved}
-          </h3>
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
+              <CheckCircle size={22} />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Received / Completed</p>
+              <h3 className="text-2xl font-bold text-emerald-600">
+                {stats.received}
+              </h3>
+            </div>
+          </div>
         </Card>
 
         <Card className="p-5 bg-white">
-          <p className="text-sm text-gray-500">Pending</p>
-          <h3 className="text-2xl font-bold text-orange-500">
-            {stats.pending}
-          </h3>
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center">
+              <Clock size={22} />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Pending Returns</p>
+              <h3 className="text-2xl font-bold text-orange-500">
+                {stats.pending}
+              </h3>
+            </div>
+          </div>
         </Card>
       </div>
 
@@ -159,10 +204,11 @@ const Returns = () => {
               size={18}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
+
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search return..."
+              placeholder="Search return no, issue order, department, or warehouse..."
               className={`${inputClass} pl-10`}
             />
           </div>
@@ -173,18 +219,27 @@ const Returns = () => {
           </Button>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl border border-gray-100">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">
-                  Return ID
+                  Return No
                 </th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">
-                  Order ID
+                  Issue Order
                 </th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">
-                  Customer
+                  Department / Client
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-600">
+                  Warehouse
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-600">
+                  Items
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-600">
+                  Total Qty
                 </th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">
                   Reason
@@ -205,61 +260,85 @@ const Returns = () => {
               {loading ? (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="10"
                     className="px-4 py-10 text-center text-gray-500"
                   >
-                    Loading returns...
+                    Loading stock returns...
                   </td>
                 </tr>
               ) : filteredReturns.length > 0 ? (
-                filteredReturns.map((item) => (
-                  <tr key={item._id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 font-medium text-gray-900">
-                      {item.returnNumber}
-                    </td>
+                filteredReturns.map((item) => {
+                  const status = item.status || "pending";
 
-                    <td className="px-4 py-4 text-gray-600">
-                      {item.order?.orderNumber || "-"}
-                    </td>
+                  return (
+                    <tr key={item._id} className="hover:bg-gray-50">
+                      <td className="px-4 py-4 font-semibold text-gray-900">
+                        {item.returnNumber || "N/A"}
+                      </td>
 
-                    <td className="px-4 py-4 text-gray-600">
-                      {item.order?.customerName || "-"}
-                    </td>
+                      <td className="px-4 py-4 text-gray-600">
+                        {item.issueOrder?.orderNumber ||
+                          item.order?.orderNumber ||
+                          "N/A"}
+                      </td>
 
-                    <td className="px-4 py-4 text-gray-600">
-                      {item.reason || "-"}
-                    </td>
+                      <td className="px-4 py-4 text-gray-600">
+                        {item.issueOrder?.department ||
+                          item.department ||
+                          item.clientName ||
+                          "N/A"}
+                      </td>
 
-                    <td className="px-4 py-4 text-gray-600">
-                      {formatDate(item.createdAt)}
-                    </td>
+                      <td className="px-4 py-4 text-gray-600">
+                        {item.warehouse?.name ||
+                          item.issueOrder?.warehouse?.name ||
+                          item.warehouseName ||
+                          "N/A"}
+                      </td>
 
-                    <td className="px-4 py-4">
-                      <span
-                        className={`inline-flex px-3 py-1 rounded-full border text-xs font-semibold capitalize ${getStatusClass(
-                          item.status
-                        )}`}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
+                      <td className="px-4 py-4 text-gray-600">
+                        {item.items?.length || 0}
+                      </td>
 
-                    <td className="px-4 py-4 text-right">
-                      <Link to={`/inventory/returns/${item._id}`}>
-                        <button className="h-9 w-9 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">
-                          <Eye size={16} className="mx-auto" />
-                        </button>
-                      </Link>
-                    </td>
-                  </tr>
-                ))
+                      <td className="px-4 py-4 font-semibold text-gray-900">
+                        {getTotalQty(item.items || [])}
+                      </td>
+
+                      <td className="px-4 py-4 text-gray-600">
+                        {item.reason || "N/A"}
+                      </td>
+
+                      <td className="px-4 py-4 text-gray-600">
+                        {formatDate(item.createdAt || item.returnDate)}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <span
+                          className={`inline-flex px-3 py-1 rounded-full border text-xs font-semibold capitalize ${getStatusClass(
+                            status
+                          )}`}
+                        >
+                          {status}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-4 text-right">
+                        <Link to={`/inventory/returns/${item._id}`}>
+                          <button className="h-9 w-9 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">
+                            <Eye size={16} className="mx-auto" />
+                          </button>
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="10"
                     className="px-4 py-10 text-center text-gray-500"
                   >
-                    No returns found.
+                    No stock returns found.
                   </td>
                 </tr>
               )}
@@ -269,6 +348,16 @@ const Returns = () => {
       </Card>
     </div>
   );
+};
+
+const formatDate = (date) => {
+  if (!date) return "-";
+
+  return new Date(date).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 };
 
 export default Returns;

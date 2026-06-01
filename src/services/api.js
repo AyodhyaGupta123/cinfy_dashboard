@@ -45,14 +45,42 @@ export const getCompanies = () =>
   api.get("/super-admin/companies");
 
 /* PRODUCT APIs */
-export const getProducts = () => api.get("/products");
-export const createProduct = (data) => api.post("/products", data);
-export const updateProduct = (id, data) => api.put(`/products/${id}`, data);
-export const deleteProduct = (id) => api.delete(`/products/${id}`);
+export const getProducts = (params = {}) =>
+  api.get("/products", { params });
+
+export const getProductById = (id) =>
+  api.get(`/products/${id}`);
+
+export const getLowStockProducts = () =>
+  api.get("/products/low-stock");
+
+export const createProduct = (formData) =>
+  api.post("/products", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+export const updateProduct = (id, formData) =>
+  api.put(`/products/${id}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+export const deleteProduct = (id) =>
+  api.delete(`/products/${id}`);
 
 /* CATEGORY APIs */
 export const getCategories = () => api.get("/categories");
 export const createCategory = (data) => api.post("/categories", data);
+
+/* SUB CATEGORY APIs */
+export const getSubCategories = () => api.get("/subcategories");
+export const createSubCategory = (data) => api.post("/subcategories", data);
+export const getSubCategoryById = (id) => api.get(`/subcategories/${id}`);
+export const updateSubCategory = (id, data) => api.put(`/subcategories/${id}`, data);
+export const deleteSubCategory = (id) => api.delete(`/subcategories/${id}`);
 
 /* STOCK APIs */
 export const stockIn = (data) => api.post("/stock-in", data);
@@ -67,23 +95,40 @@ export const createStockOut = (data) => api.post("/stock/out", data);
 export const createStockAdjustment = (data) =>
   api.post("/stock/adjustment", data);
 
-export const getLowStockProducts = () => api.get("/stock/low-stock");
 
-/* ORDERS APIs */
-export const getOrders = () => api.get("/orders");
-export const getOrderById = (id) => api.get(`/orders/${id}`);
-export const createOrder = (data) => api.post("/orders", data);
+/* ISSUE ORDER APIs */
+
+export const getOrders = () =>
+  api.get("/orders");
+
+export const getOrderById = (id) =>
+  api.get(`/orders/${id}`);
+
+export const createOrder = (data) =>
+  api.post("/orders", data);
+
 export const updateOrderStatus = (id, data) =>
   api.put(`/orders/${id}/status`, data);
-export const deleteOrder = (id) => api.delete(`/orders/${id}`);
 
-/* RETURN APIs */
-export const getReturns = () => api.get("/returns");
-export const getReturnById = (id) => api.get(`/returns/${id}`);
-export const createReturn = (data) => api.post("/returns", data);
+export const deleteOrder = (id) =>
+  api.delete(`/orders/${id}`);
+
+/* STOCK RETURN APIs */
+
+export const getReturns = () =>
+  api.get("/returns");
+
+export const getReturnById = (id) =>
+  api.get(`/returns/${id}`);
+
+export const createReturn = (data) =>
+  api.post("/returns", data);
+
 export const updateReturnStatus = (id, data) =>
   api.put(`/returns/${id}/status`, data);
-export const deleteReturn = (id) => api.delete(`/returns/${id}`);
+
+export const deleteReturn = (id) =>
+  api.delete(`/returns/${id}`);
 
 /* REFUND APIs */
 export const getRefunds = () => api.get("/refunds");
@@ -144,6 +189,49 @@ export const updateSupplier = (id, data) =>
 export const deleteSupplier = (id) =>
   api.delete(`/purchases/suppliers/${id}`);
 
+/* UNIT APIs */
+
+export const getUnits = () => api.get("/units");
+
+export const getUnitById = (id) =>
+  api.get(`/units/${id}`);
+
+export const createUnit = (data) =>
+  api.post("/units", data);
+
+export const updateUnit = (id, data) =>
+  api.put(`/units/${id}`, data);
+
+export const deleteUnit = (id) =>
+  api.delete(`/units/${id}`);
+
+/* TAX APIs */
+
+export const getTaxes = async (params = {}) => {
+  const res = await api.get("/taxes", { params });
+  return res.data;
+};
+
+export const getTaxById = async (id) => {
+  const res = await api.get(`/taxes/${id}`);
+  return res.data;
+};
+
+export const createTax = async (data) => {
+  const res = await api.post("/taxes", data);
+  return res.data;
+};
+
+export const updateTax = async (id, data) => {
+  const res = await api.put(`/taxes/${id}`, data);
+  return res.data;
+};
+
+export const deleteTax = async (id) => {
+  const res = await api.delete(`/taxes/${id}`);
+  return res.data;
+};
+
 
 /* PURCHASE ORDER APIs */
 export const getPurchaseOrders = () =>
@@ -180,3 +268,17 @@ export const updateGoodsReceived = (id, data) =>
 
 export const deleteGoodsReceived = (id) =>
   api.delete(`/purchases/grn/${id}`);
+
+/* ANALYTICS APIs */
+
+export const getAnalyticsDashboard = () =>
+  api.get("/dashboard/analytics");
+
+
+/* REPORT APIs */
+
+export const getReports = () => api.get("/reports");
+export const createReport = (data) => api.post("/reports", data);
+export const getReportById = (id) => api.get(`/reports/${id}`);
+export const updateReport = (id, data) => api.put(`/reports/${id}`, data);
+export const deleteReport = (id) => api.delete(`/reports/${id}`);

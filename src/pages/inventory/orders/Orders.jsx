@@ -1,5 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Search, Download, ShoppingBag, Eye, Truck } from "lucide-react";
+import {
+  Search,
+  Download,
+  ClipboardList,
+  Eye,
+  PackageCheck,
+  Clock,
+  CheckCircle,
+  Plus,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import Card from "../../../components/UI/Card";
 import Button from "../../../components/UI/Button";
@@ -27,7 +36,7 @@ const Orders = () => {
     } catch (error) {
       toast.error(
         "Failed",
-        error.response?.data?.message || "Failed to load orders"
+        error.response?.data?.message || "Failed to load issue orders",
       );
     } finally {
       setLoading(false);
@@ -38,11 +47,23 @@ const Orders = () => {
     fetchOrders();
   }, []);
 
+  const getTotalQty = (items = []) =>
+    items.reduce(
+      (sum, item) => sum + Number(item.quantity || item.qty || 0),
+      0,
+    );
+
   const filteredOrders = useMemo(() => {
     return orders.filter((item) => {
-      const value = `${item.orderNumber || ""} ${item.customerName || ""} ${
-        item.customerPhone || ""
-      }`;
+      const warehouseName =
+        item.warehouse?.name ||
+        item.warehouse?.warehouseName ||
+        item.warehouseName ||
+        "";
+
+      const value = `${item.orderNumber || ""} ${item.issueOrderNumber || ""} ${
+        item.department || ""
+      } ${item.clientName || ""} ${warehouseName}`;
 
       return value.toLowerCase().includes(search.toLowerCase());
     });
@@ -51,64 +72,61 @@ const Orders = () => {
   const stats = useMemo(() => {
     const total = orders.length;
 
-    const delivered = orders.filter(
-      (item) => item.orderStatus === "delivered"
+    const issued = orders.filter((item) =>
+      ["issued", "completed"].includes(
+        String(item.status || item.orderStatus || "").toLowerCase(),
+      ),
     ).length;
 
     const pending = orders.filter((item) =>
-      ["pending", "confirmed", "packed", "shipped"].includes(item.orderStatus)
+      ["draft", "pending", "approved"].includes(
+        String(item.status || item.orderStatus || "").toLowerCase(),
+      ),
     ).length;
 
-    return { total, delivered, pending };
+    return { total, issued, pending };
   }, [orders]);
 
-  const formatCurrency = (amount) => {
-    return `₹${Number(amount || 0).toLocaleString("en-IN")}`;
-  };
+  const getStatusClass = (status = "") => {
+    const value = status.toLowerCase();
 
-  const formatDate = (date) => {
-    if (!date) return "-";
-
-    return new Date(date).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const getStatusClass = (status) => {
-    if (status === "delivered") {
+    if (["issued", "completed"].includes(value)) {
       return "bg-emerald-50 text-emerald-600 border-emerald-100";
     }
 
-    if (["pending", "confirmed", "packed", "shipped"].includes(status)) {
+    if (["draft", "pending", "approved"].includes(value)) {
       return "bg-orange-50 text-orange-600 border-orange-100";
     }
 
-    if (status === "cancelled") {
+    if (value === "cancelled") {
       return "bg-red-50 text-red-600 border-red-100";
     }
 
     return "bg-gray-50 text-gray-600 border-gray-100";
   };
 
-  const getPaymentLabel = (status, method) => {
-    if (status === "paid") return "Paid";
-    if (method === "cod") return "COD";
-    if (status === "refunded") return "Refunded";
-    return status || "-";
-  };
-
   const exportOrders = () => {
     const rows = [
-      ["Order ID", "Customer", "Amount", "Payment", "Date", "Status"],
+      [
+        "Issue Order No",
+        "Department / Client",
+        "Warehouse",
+        "Items",
+        "Total Qty",
+        "Date",
+        "Status",
+      ],
       ...filteredOrders.map((item) => [
-        item.orderNumber,
-        item.customerName,
-        item.grandTotal,
-        getPaymentLabel(item.paymentStatus, item.paymentMethod),
-        formatDate(item.orderDate || item.createdAt),
-        item.orderStatus,
+        item.orderNumber || item.issueOrderNumber || "",
+        item.department || item.clientName || "",
+        item.warehouse?.name ||
+          item.warehouse?.warehouseName ||
+          item.warehouseName ||
+          "",
+        item.items?.length || 0,
+        getTotalQty(item.items || []),
+        formatDate(item.issueDate || item.createdAt),
+        item.status || item.orderStatus || "pending",
       ]),
     ];
 
@@ -118,7 +136,7 @@ const Orders = () => {
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = "orders.csv";
+    a.download = "issue-orders.csv";
     a.click();
 
     window.URL.revokeObjectURL(url);
@@ -130,14 +148,15 @@ const Orders = () => {
         items={[
           { label: "Dashboard", path: "/" },
           { label: "Orders" },
-          { label: "All Orders" },
+          { label: "Issue Orders" },
         ]}
       />
 
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Issue Orders</h1>
         <p className="text-gray-500 mt-1">
-          Manage customer orders, payments and delivery status.
+          Manage internal stock issue, department dispatch, and warehouse stock
+          movement.
         </p>
       </div>
 
@@ -145,10 +164,10 @@ const Orders = () => {
         <Card className="p-5 bg-white">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
-              <ShoppingBag size={22} />
+              <ClipboardList size={22} />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Orders</p>
+              <p className="text-sm text-gray-500">Total Issue Orders</p>
               <h3 className="text-2xl font-bold text-gray-900">
                 {stats.total}
               </h3>
@@ -157,17 +176,31 @@ const Orders = () => {
         </Card>
 
         <Card className="p-5 bg-white">
-          <p className="text-sm text-gray-500">Delivered</p>
-          <h3 className="text-2xl font-bold text-emerald-600">
-            {stats.delivered}
-          </h3>
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
+              <PackageCheck size={22} />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Issued / Completed</p>
+              <h3 className="text-2xl font-bold text-emerald-600">
+                {stats.issued}
+              </h3>
+            </div>
+          </div>
         </Card>
 
         <Card className="p-5 bg-white">
-          <p className="text-sm text-gray-500">Pending / Shipped</p>
-          <h3 className="text-2xl font-bold text-orange-500">
-            {stats.pending}
-          </h3>
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center">
+              <Clock size={22} />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Pending / Approved</p>
+              <h3 className="text-2xl font-bold text-orange-500">
+                {stats.pending}
+              </h3>
+            </div>
+          </div>
         </Card>
       </div>
 
@@ -182,32 +215,44 @@ const Orders = () => {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search order or customer..."
+              placeholder="Search issue order, department, or warehouse..."
               className={`${inputClass} pl-10`}
             />
           </div>
 
-          <Button variant="outline" onClick={exportOrders}>
-            <Download size={18} />
-            Export
-          </Button>
+          <div className="flex flex-wrap gap-3">
+            <Link to="/inventory/orders/add">
+              <Button className="bg-emerald-500 hover:bg-emerald-600 text-white">
+                <Plus size={18} />
+                Add Issue Order
+              </Button>
+            </Link>
+
+            <Button variant="outline" onClick={exportOrders}>
+              <Download size={18} />
+              Export
+            </Button>
+          </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl border border-gray-100">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">
-                  Order ID
+                  Issue Order No
                 </th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">
-                  Customer
+                  Department / Client
                 </th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">
-                  Amount
+                  Warehouse
                 </th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">
-                  Payment
+                  Items
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-600">
+                  Total Qty
                 </th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">
                   Date
@@ -225,62 +270,73 @@ const Orders = () => {
               {loading ? (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="8"
                     className="px-4 py-10 text-center text-gray-500"
                   >
-                    Loading orders...
+                    Loading issue orders...
                   </td>
                 </tr>
               ) : filteredOrders.length > 0 ? (
-                filteredOrders.map((item) => (
-                  <tr key={item._id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 font-medium text-gray-900">
-                      {item.orderNumber}
-                    </td>
+                filteredOrders.map((item) => {
+                  const status = item.status || item.orderStatus || "pending";
 
-                    <td className="px-4 py-4 text-gray-600">
-                      {item.customerName}
-                    </td>
+                  return (
+                    <tr key={item._id} className="hover:bg-gray-50">
+                      <td className="px-4 py-4 font-semibold text-gray-900">
+                        {item.orderNumber || item.issueOrderNumber || "N/A"}
+                      </td>
 
-                    <td className="px-4 py-4 font-semibold text-gray-900">
-                      {formatCurrency(item.grandTotal)}
-                    </td>
+                      <td className="px-4 py-4 text-gray-600">
+                        {item.department || item.clientName || "N/A"}
+                      </td>
 
-                    <td className="px-4 py-4 text-gray-600 capitalize">
-                      {getPaymentLabel(item.paymentStatus, item.paymentMethod)}
-                    </td>
+                      <td className="px-4 py-4 text-gray-600">
+                        {item.warehouse?.name ||
+                          item.warehouse?.warehouseName ||
+                          item.warehouseName ||
+                          "N/A"}
+                      </td>
 
-                    <td className="px-4 py-4 text-gray-600">
-                      {formatDate(item.orderDate || item.createdAt)}
-                    </td>
+                      <td className="px-4 py-4 text-gray-600">
+                        {item.items?.length || 0}
+                      </td>
 
-                    <td className="px-4 py-4">
-                      <span
-                        className={`inline-flex items-center gap-1 px-3 py-1 rounded-full border text-xs font-semibold capitalize ${getStatusClass(
-                          item.orderStatus
-                        )}`}
-                      >
-                        <Truck size={13} />
-                        {item.orderStatus}
-                      </span>
-                    </td>
+                      <td className="px-4 py-4 font-semibold text-gray-900">
+                        {getTotalQty(item.items || [])}
+                      </td>
 
-                    <td className="px-4 py-4 text-right">
-                      <Link to={`/inventory/orders/${item._id}`}>
-                        <button className="h-9 w-9 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">
-                          <Eye size={16} className="mx-auto" />
-                        </button>
-                      </Link>
-                    </td>
-                  </tr>
-                ))
+                      <td className="px-4 py-4 text-gray-600">
+                        {formatDate(item.issueDate || item.createdAt)}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <span
+                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full border text-xs font-semibold capitalize ${getStatusClass(
+                            status,
+                          )}`}
+                        >
+                          <CheckCircle size={13} />
+                          {status}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-4 text-right">
+                        <Link to={`/inventory/orders/${item._id}`}>
+                          <button className="h-9 w-9 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">
+                            <Eye size={16} className="mx-auto" />
+                          </button>
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="8"
                     className="px-4 py-10 text-center text-gray-500"
                   >
-                    No orders found.
+                    No issue orders found.
                   </td>
                 </tr>
               )}
@@ -290,6 +346,16 @@ const Orders = () => {
       </Card>
     </div>
   );
+};
+
+const formatDate = (date) => {
+  if (!date) return "-";
+
+  return new Date(date).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 };
 
 export default Orders;

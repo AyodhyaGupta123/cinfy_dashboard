@@ -19,22 +19,22 @@ const inputClass =
   "w-full h-11 rounded-xl border border-gray-200 bg-white px-4 text-gray-900 placeholder:text-gray-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
 
 const Categories = () => {
+  const toast = useToast();
+
   const [search, setSearch] = useState("");
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
-  const toast = useToast();
 
   const fetchCategories = async () => {
     try {
       setLoading(true);
+
       const res = await api.get("/categories");
 
-      if (res.data.success) {
-        setCategories(res.data.categories || []);
-      }
+      setCategories(res.data.categories || res.data || []);
     } catch (error) {
       toast.error(
-        "Failed",
+        "Load Failed",
         error.response?.data?.message || "Failed to load categories"
       );
     } finally {
@@ -54,12 +54,10 @@ const Categories = () => {
     if (!confirmDelete) return;
 
     try {
-      const res = await api.delete(`/categories/${id}`);
+      await api.delete(`/categories/${id}`);
 
-      if (res.data.success) {
-        toast.success("Deleted", "Category deleted successfully.");
-        fetchCategories();
-      }
+      toast.success("Deleted", "Category deleted successfully.");
+      fetchCategories();
     } catch (error) {
       toast.error(
         "Delete Failed",
@@ -70,18 +68,13 @@ const Categories = () => {
 
   const filteredCategories = useMemo(() => {
     return categories.filter((category) => {
-      const value = `${category.name || ""} ${category.code || ""}`;
+      const value = `${category.name || ""} ${
+        category.parentCategory || ""
+      } ${category.description || ""}`;
+
       return value.toLowerCase().includes(search.toLowerCase());
     });
   }, [categories, search]);
-
-  const stats = useMemo(() => {
-    const total = categories.length;
-    const active = categories.filter((item) => item.status === "active").length;
-    const inactive = categories.filter((item) => item.status === "inactive").length;
-
-    return { total, active, inactive };
-  }, [categories]);
 
   return (
     <div className="space-y-6">
@@ -109,37 +102,29 @@ const Categories = () => {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-5 bg-white">
-          <div className="flex items-center gap-4">
+      <Card className="p-5 bg-white">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
+          <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
               <FolderTree size={22} />
             </div>
+
             <div>
-              <p className="text-sm text-gray-500">Total Categories</p>
-              <h3 className="text-2xl font-bold text-gray-900">{stats.total}</h3>
+              <h2 className="text-lg font-semibold text-gray-900">
+                Category List
+              </h2>
+              <p className="text-sm text-gray-500">
+                Total {filteredCategories.length} categories found.
+              </p>
             </div>
           </div>
-        </Card>
 
-        <Card className="p-5 bg-white">
-          <p className="text-sm text-gray-500">Active Categories</p>
-          <h3 className="text-2xl font-bold text-emerald-600">{stats.active}</h3>
-        </Card>
-
-        <Card className="p-5 bg-white">
-          <p className="text-sm text-gray-500">Inactive Categories</p>
-          <h3 className="text-2xl font-bold text-red-500">{stats.inactive}</h3>
-        </Card>
-      </div>
-
-      <Card className="p-5 bg-white">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
           <div className="relative w-full lg:max-w-md">
             <Search
               size={18}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
+
             <input
               type="text"
               placeholder="Search category..."
@@ -150,22 +135,22 @@ const Categories = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto border border-gray-100 rounded-xl">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">
                   Category
                 </th>
+
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">
-                  Code
+                  Parent Category
                 </th>
+
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">
-                  Products
+                  Description
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-600">
-                  Status
-                </th>
+
                 <th className="px-4 py-3 text-right font-semibold text-gray-600">
                   Action
                 </th>
@@ -175,7 +160,10 @@ const Categories = () => {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="px-4 py-10 text-center text-gray-500">
+                  <td
+                    colSpan="4"
+                    className="px-4 py-10 text-center text-gray-500"
+                  >
                     Loading categories...
                   </td>
                 </tr>
@@ -200,42 +188,31 @@ const Categories = () => {
                           <p className="font-medium text-gray-900">
                             {category.name}
                           </p>
-                          <p className="text-xs text-gray-400">
-                            {category.description || "No description"}
-                          </p>
                         </div>
                       </div>
                     </td>
 
                     <td className="px-4 py-4 text-gray-600">
-                      {category.code || "-"}
+                      {category.parentCategory || "Top Level Category"}
                     </td>
 
                     <td className="px-4 py-4 text-gray-600">
-                      {category.products || 0}
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <span
-                        className={`inline-flex px-3 py-1 rounded-full border text-xs font-semibold ${
-                          category.status === "active"
-                            ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                            : "bg-red-50 text-red-600 border-red-100"
-                        }`}
-                      >
-                        {category.status === "active" ? "Active" : "Inactive"}
-                      </span>
+                      {category.description || "-"}
                     </td>
 
                     <td className="px-4 py-4">
                       <div className="flex items-center justify-end gap-2">
                         <Link to={`/inventory/categories/edit/${category._id}`}>
-                          <button className="p-2 rounded-lg hover:bg-gray-100 text-gray-600">
+                          <button
+                            type="button"
+                            className="p-2 rounded-lg hover:bg-emerald-50 text-gray-600 hover:text-emerald-600"
+                          >
                             <Edit size={17} />
                           </button>
                         </Link>
 
                         <button
+                          type="button"
                           onClick={() => handleDelete(category._id)}
                           className="p-2 rounded-lg hover:bg-red-50 text-red-500"
                         >
@@ -247,7 +224,10 @@ const Categories = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="px-4 py-10 text-center text-gray-500">
+                  <td
+                    colSpan="4"
+                    className="px-4 py-10 text-center text-gray-500"
+                  >
                     No categories found.
                   </td>
                 </tr>

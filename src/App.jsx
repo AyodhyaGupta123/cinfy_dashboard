@@ -32,6 +32,8 @@ import ChatBotWidget from "./components/ChatBotWidget";
 import { AuthProvider } from "./context/AuthContext";
 import useScrollToTop from "./hooks/useScrollToTop";
 import AddCategory from "./pages/inventory/categories/AddCategory";
+import AddUnit from "./pages/inventory/products/AddUnit";
+import AddTax from "./pages/inventory/products/AddTax";
 import EditCategory from "./pages/inventory/categories/EditCategory";
 import EditProduct from "./pages/inventory/products/EditProduct";
 import ProductDetails from "./pages/inventory/products/ProductDetails";
@@ -70,6 +72,14 @@ import AddSupplier from "./pages/purchases/suppliers/AddSupplier";
 import GoodsReceived from "./pages/purchases/grn/GoodsReceived";
 import PurchaseDetails from "./pages/purchases/purchase-orders/PurchaseDetails";
 import SupplierDetails from "./pages/purchases/suppliers/SupplierDetails";
+import EditWarehouse from "./pages/inventory/warehouse/EditWarehouse";
+import AddIssueOrder from "./pages/inventory/orders/AddIssueOrder";
+import TaxList from "./pages/inventory/products/TaxList";
+import EditTax from "./pages/inventory/products/EditTax";
+import SubCategoryList from "./pages/inventory/SubCategory/SubCategoryList";
+import AddSubCategory from "./pages/inventory/SubCategory/AddSubCategory";
+import UnitList from "./pages/inventory/products/UnitList";
+import CreateReport from "./pages/CreateReport";
 
 function ScrollToTop() {
   useScrollToTop();
@@ -108,6 +118,20 @@ function App() {
               <Route path="inventory/products" element={<Products />} />
               <Route path="inventory/products/add" element={<AddProduct />} />
               <Route path="inventory/categories" element={<Categories />} />
+              <Route
+                path="inventory/categories/add-subcategory"
+                element={<AddSubCategory />}
+              />
+               <Route path="inventory/units" element={<UnitList />} />
+              <Route path="inventory/units/add" element={<AddUnit />} />
+              <Route path="inventory/taxes/add" element={<AddTax />} />
+              <Route path="/inventory/taxes" element={<TaxList />} />
+              <Route path="/inventory/taxes/edit/:id" element={<EditTax />} />
+
+              <Route
+                path="/inventory/subcategories"
+                element={<SubCategoryList />}
+              />
               <Route
                 path="/inventory/brands/edit/:id"
                 element={<EditBrand />}
@@ -170,6 +194,10 @@ function App() {
               <Route path="/inventory/brands/add" element={<AddBrand />} />
               <Route path="/inventory/warehouses" element={<Warehouses />} />
               <Route
+                path="/inventory/warehouses/edit/:id"
+                element={<EditWarehouse />}
+              />
+              <Route
                 path="/inventory/warehouses/add"
                 element={<AddWarehouse />}
               />
@@ -183,6 +211,7 @@ function App() {
               <Route path="/inventory/orders" element={<Orders />} />
               <Route path="/inventory/refunds" element={<Refunds />} />
               <Route path="/inventory/returns" element={<Returns />} />
+              <Route path="/inventory/orders/add" element={<AddIssueOrder />} />
               <Route path="/inventory/orders/:id" element={<OrderDetails />} />
               <Route
                 path="/inventory/refunds/:id"
@@ -199,13 +228,20 @@ function App() {
                 element={<CreatePurchase />}
               />
               <Route path="/purchases/suppliers" element={<Suppliers />} />
-              <Route path="/purchases/suppliers/add" element={<AddSupplier />} />
+              <Route
+                path="/purchases/suppliers/add"
+                element={<AddSupplier />}
+              />
               <Route path="/purchases/grn" element={<GoodsReceived />} />
               <Route
                 path="/purchases/orders/:id"
                 element={<PurchaseDetails />}
               />
-              <Route path="/purchases/suppliers/:id" element={<SupplierDetails />} />
+              <Route
+                path="/purchases/suppliers/:id"
+                element={<SupplierDetails />}
+              />
+              <Route path="/custom-reports/create" element={<CreateReport />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
