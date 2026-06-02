@@ -74,7 +74,7 @@ const ProductDetails = () => {
     } catch (error) {
       toast.error(
         "Failed",
-        error.response?.data?.message || "Failed to load product details"
+        error.response?.data?.message || "Failed to load product details",
       );
     } finally {
       setLoading(false);
@@ -131,7 +131,9 @@ const ProductDetails = () => {
     );
   }
 
-  const currentStock = Number(product.currentStock || product.openingStock || 0);
+  const currentStock = Number(
+    product.currentStock || product.openingStock || 0,
+  );
   const purchasePrice = Number(product.purchasePrice || 0);
   const sellingPrice = Number(product.sellingPrice || 0);
   const stockValue = currentStock * purchasePrice;
@@ -172,9 +174,7 @@ const ProductDetails = () => {
 
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Product Details
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Product Details</h1>
           <p className="text-gray-500 mt-1">
             View complete product information for generic inventory.
           </p>
@@ -222,7 +222,7 @@ const ProductDetails = () => {
                 </div>
 
                 <p className="text-sm text-gray-500 mt-1">
-                  {product.shortName || product.subCategory || "No short name"}
+                  {product.shortName || "No short name"}
                 </p>
 
                 <p className="text-gray-500 mt-3">
@@ -314,23 +314,43 @@ const ProductDetails = () => {
           <InfoRow label="SKU" value={product.sku} />
           <InfoRow label="Barcode / QR Code" value={product.barcode} />
           <InfoRow label="Product Type" value={product.productType} />
-          <InfoRow label="Category" value={product.category} />
-          <InfoRow label="Sub Category" value={product.subCategory} />
-          <InfoRow label="Brand" value={product.brand} />
+          <InfoRow label="Category" value={product.category?.name || "-"} />
+
+          <InfoRow
+            label="Sub Category"
+            value={product.subCategory?.name || "No sub category"}
+          />
+
+          <InfoRow label="Brand" value={product.brand?.name || "-"} />
           <InfoRow label="HSN / SAC Code" value={product.hsnSacCode} />
           <InfoRow label="Internal Code" value={product.internalProductCode} />
-          <InfoRow label="Primary Unit" value={product.primaryUnit || product.unit} />
+          <InfoRow
+            label="Primary Unit"
+            value={product.primaryUnit || product.unit}
+          />
           <InfoRow label="Visibility" value={product.visibility} />
         </Card>
 
         <Card className="p-6 bg-white">
           <SectionTitle icon={IndianRupee} title="Pricing Information" />
 
-          <InfoRow label="Purchase Price" value={`₹${product.purchasePrice || 0}`} />
-          <InfoRow label="Selling Price" value={`₹${product.sellingPrice || 0}`} />
+          <InfoRow
+            label="Purchase Price"
+            value={`₹${product.purchasePrice || 0}`}
+          />
+          <InfoRow
+            label="Selling Price"
+            value={`₹${product.sellingPrice || 0}`}
+          />
           <InfoRow label="MRP" value={`₹${product.mrp || 0}`} />
-          <InfoRow label="Wholesale Price" value={`₹${product.wholesalePrice || 0}`} />
-          <InfoRow label="Distributor Price" value={`₹${product.distributorPrice || 0}`} />
+          <InfoRow
+            label="Wholesale Price"
+            value={`₹${product.wholesalePrice || 0}`}
+          />
+          <InfoRow
+            label="Distributor Price"
+            value={`₹${product.distributorPrice || 0}`}
+          />
           <InfoRow label="Tax" value={product.tax ? `${product.tax}%` : "0%"} />
           <InfoRow label="Discount Type" value={product.discountType} />
           <InfoRow label="Discount Value" value={product.discountValue || 0} />
@@ -343,10 +363,19 @@ const ProductDetails = () => {
 
           <InfoRow label="Opening Stock" value={product.openingStock || 0} />
           <InfoRow label="Current Stock" value={currentStock} />
-          <InfoRow label="Minimum Stock Alert" value={product.minStockLevel || 0} />
-          <InfoRow label="Reorder Quantity" value={product.reorderQuantity || 0} />
+          <InfoRow
+            label="Minimum Stock Alert"
+            value={product.minStockLevel || 0}
+          />
+          <InfoRow
+            label="Reorder Quantity"
+            value={product.reorderQuantity || 0}
+          />
           <InfoRow label="Maximum Stock" value={product.maximumStock || 0} />
-          <InfoRow label="Warehouse / Store" value={product.warehouseLocation} />
+          <InfoRow
+            label="Warehouse / Store"
+            value={product.warehouseLocation}
+          />
           <InfoRow label="Stock Value" value={`₹${stockValue}`} />
           <InfoRow label="Inventory Status" value={inventoryStatus} />
         </Card>
@@ -453,7 +482,9 @@ const ProductDetails = () => {
                   <tr key={index} className="border-t border-gray-100">
                     <td className="px-4 py-3">{batch.batchNo || "-"}</td>
                     <td className="px-4 py-3">{batch.lotNo || "-"}</td>
-                    <td className="px-4 py-3">{batch.manufacturingDate || "-"}</td>
+                    <td className="px-4 py-3">
+                      {batch.manufacturingDate || "-"}
+                    </td>
                     <td className="px-4 py-3">{batch.expiryDate || "-"}</td>
                     <td className="px-4 py-3">{batch.bestBefore || "-"}</td>
                     <td className="px-4 py-3">{batch.quantity || "-"}</td>
@@ -483,10 +514,14 @@ const ProductDetails = () => {
               <tbody>
                 {product.suppliers.map((supplier, index) => (
                   <tr key={index} className="border-t border-gray-100">
-                    <td className="px-4 py-3">{supplier.preferredVendor || "-"}</td>
+                    <td className="px-4 py-3">
+                      {supplier.preferredVendor || "-"}
+                    </td>
                     <td className="px-4 py-3">{supplier.vendorSku || "-"}</td>
                     <td className="px-4 py-3">{supplier.leadTime || "-"}</td>
-                    <td className="px-4 py-3">{supplier.purchaseUnit || "-"}</td>
+                    <td className="px-4 py-3">
+                      {supplier.purchaseUnit || "-"}
+                    </td>
                   </tr>
                 ))}
               </tbody>

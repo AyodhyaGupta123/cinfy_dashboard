@@ -197,9 +197,9 @@ const AddProduct = () => {
   const [formData, setFormData] = useState({
     name: "",
     shortName: "",
-    category: "",
-    subCategory: "",
-    brand: "",
+    categoryId: "",
+    subCategoryId: "",
+    brandId: "",
     productType: "Simple Product",
     sku: "",
     barcode: "",
@@ -345,7 +345,8 @@ const AddProduct = () => {
   };
 
   const generateSku = () => {
-    const category = formData.category || "PRODUCT";
+    const category =
+      categories.find((c) => c._id === formData.categoryId)?.name || "PRODUCT";
     const name = formData.name || "ITEM";
     const code = `${name.slice(0, 4)}-${category.slice(0, 4)}-${Date.now()
       .toString()
@@ -439,10 +440,22 @@ const AddProduct = () => {
       return;
     }
 
-    if (!formData.category.trim()) {
+    if (!formData.categoryId) {
       toast.error("Validation Error", "Product category is required.");
       return;
     }
+
+    if (!formData.subCategoryId) {
+      toast.error("Validation Error", "Sub category is required.");
+      return;
+    }
+
+    if (!formData.brandId) {
+      toast.error("Validation Error", "Brand is required.");
+      return;
+    }
+
+    console.log("FORM DATA BEFORE SAVE", formData);
 
     if (!formData.sku.trim()) {
       toast.error("Validation Error", "SKU is required.");
@@ -659,7 +672,6 @@ const AddProduct = () => {
                           <option>Bundle/Combo</option>
                           <option>Service</option>
                         </SelectField>
-
                         <SelectField
                           label="Category"
                           required
@@ -669,11 +681,11 @@ const AddProduct = () => {
                               navigate={navigate}
                             />
                           }
-                          {...fieldProps("category")}
+                          {...fieldProps("categoryId")}
                         >
                           <option value="">Select category</option>
                           {categories.map((item) => (
-                            <option key={item._id} value={item.name}>
+                            <option key={item._id} value={item._id}>
                               {item.name}
                             </option>
                           ))}
@@ -683,22 +695,28 @@ const AddProduct = () => {
                           label="Sub Category"
                           addon={
                             <AddonButton
-                              path="/inventory/subcategories/add"
+                              path="/inventory/categories/add-subcategory"
                               navigate={navigate}
                             />
                           }
-                          {...fieldProps("subCategory")}
+                          {...fieldProps("subCategoryId")}
                         >
                           <option value="">Select sub category</option>
 
                           {subCategories
-                            .filter(
-                              (item) =>
-                                !formData.category ||
-                                item.category === formData.category,
-                            )
+                            .filter((item) => {
+                              const parentId =
+                                typeof item.categoryId === "object"
+                                  ? item.categoryId?._id
+                                  : item.categoryId;
+
+                              return (
+                                !formData.categoryId ||
+                                parentId === formData.categoryId
+                              );
+                            })
                             .map((item) => (
-                              <option key={item._id} value={item.name}>
+                              <option key={item._id} value={item._id}>
                                 {item.name}
                               </option>
                             ))}
@@ -712,11 +730,11 @@ const AddProduct = () => {
                               navigate={navigate}
                             />
                           }
-                          {...fieldProps("brand")}
+                          {...fieldProps("brandId")}
                         >
                           <option value="">Select brand</option>
                           {brands.map((item) => (
-                            <option key={item._id} value={item.name}>
+                            <option key={item._id} value={item._id}>
                               {item.name}
                             </option>
                           ))}

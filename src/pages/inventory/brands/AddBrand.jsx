@@ -22,9 +22,11 @@ const AddBrand = () => {
 
   const [formData, setFormData] = useState({
     name: "",
+    code: "",
     website: "",
     description: "",
     categories: "",
+    status: "active",
   });
 
   const handleChange = (e) => {
@@ -59,6 +61,11 @@ const AddBrand = () => {
 
     if (!formData.name.trim()) {
       toast.error("Validation Error", "Brand name is required.");
+      return;
+    }
+
+    if (!formData.code.trim()) {
+      toast.error("Validation Error", "Brand code is required.");
       return;
     }
 
@@ -155,6 +162,21 @@ const AddBrand = () => {
 
           <div>
             <label className="text-sm font-medium text-gray-700">
+              Brand Code <span className="text-red-500">*</span>
+            </label>
+
+            <input
+              type="text"
+              name="code"
+              placeholder="Example: ROYAL001"
+              value={formData.code}
+              onChange={handleChange}
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700">
               Website
             </label>
 
@@ -166,6 +188,22 @@ const AddBrand = () => {
               onChange={handleChange}
               className={inputClass}
             />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700">
+              Status
+            </label>
+
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className={inputClass}
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
           </div>
 
           <div>
@@ -203,9 +241,7 @@ const AddBrand = () => {
               <p className="text-sm font-semibold text-gray-700">
                 Upload Brand Logo
               </p>
-              <p className="mt-1 text-xs text-gray-500">
-                JPG, PNG up to 2MB
-              </p>
+              <p className="mt-1 text-xs text-gray-500">JPG, PNG up to 2MB</p>
             </label>
 
             {image && (

@@ -5,7 +5,9 @@ import {
   PackageCheck,
   RefreshCw,
   Search,
+  X,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Card from "../../../components/UI/Card";
 import Button from "../../../components/UI/Button";
 import Badge from "../../../components/UI/Badge";
@@ -13,29 +15,54 @@ import Breadcrumb from "../../../components/UI/Breadcrumb";
 import { useToast } from "../../../components/UI/Toast";
 import api from "../../../services/api";
 
-const inputClass =
+const inputClass = 
   "w-full h-11 rounded-xl border border-gray-200 bg-white px-4 text-gray-900 placeholder:text-gray-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
 
 const GoodsReceived = () => {
   const toast = useToast();
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [grnList, setGrnList] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [receiveLoadingId, setReceiveLoadingId] = useState(null);
+
+  const [showReceiveModal, setShowReceiveModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const [receiveForm, setReceiveForm] = useState({
+    receivedBy: "",
+    warehouse: "",
+    remarks: "Goods received successfully.",
+  });
 
   const fetchGoodsReceived = async () => {
     try {
       setLoading(true);
 
-      const res = await api.get("/purchases/grn");
+      const [grnRes, orderRes] = await Promise.all([
+        api.get("/purchases/grn"),
+        api.get("/purchases/orders"),
+      ]);
 
-      if (res.data.success) {
-        setGrnList(res.data.grns || []);
-      }
+      const grns = grnRes.data.grns || [];
+      const orders = orderRes.data.purchaseOrders || [];
+
+      const pendingOrders = orders
+        .filter((order) => order.status === "Pending")
+        .map((order) => ({
+          _id: order._id,
+          grnNumber: "",
+          purchaseOrder: order,
+          supplier: order.supplier,
+          receivedDate: "",
+          status: "Pending",
+          isPendingOrder: true,
+        }));
+
+      setGrnList([...pendingOrders, ...grns]);
     } catch (error) {
-      console.error("Failed to fetch GRN records:", error);
-
       toast.error(
         "Load Failed",
         error.response?.data?.message || "Unable to load GRN records."
@@ -45,8 +72,21 @@ const GoodsReceived = () => {
     }
   };
 
+  const fetchWarehouses = async () => {
+    try {
+      const res = await api.get("/warehouses");
+      setWarehouses(res.data.warehouses || res.data.data || res.data || []);
+    } catch (error) {
+      toast.error(
+        "Warehouse Load Failed",
+        error.response?.data?.message || "Unable to load warehouses."
+      );
+    }
+  };
+
   useEffect(() => {
     fetchGoodsReceived();
+    fetchWarehouses();
   }, []);
 
   const filtered = useMemo(() => {
@@ -76,27 +116,73 @@ const GoodsReceived = () => {
     return new Date(date).toLocaleDateString("en-IN");
   };
 
-  const handleReceive = async (item) => {
+  const openReceiveModal = (item) => {
+    setSelectedOrder(item);
+    setReceiveForm({
+      receivedBy: "",
+      warehouse: "",
+      remarks: "Goods received successfully.",
+    });
+    setShowReceiveModal(true);
+  };
+
+  const closeReceiveModal = () => {
+    setShowReceiveModal(false);
+    setSelectedOrder(null);
+  };
+
+  const handleReceiveFormChange = (e) => {
+    const { name, value } = e.target;
+
+    setReceiveForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleReceive = async () => {
+    if (!selectedOrder) return;
+
+    if (!receiveForm.receivedBy.trim()) {
+      toast.error("Validation Error", "Received By is required.");
+      return;
+    }
+
+    if (!receiveForm.warehouse) {
+      toast.error("Validation Error", "Warehouse is required.");
+      return;
+    }
+
     try {
-      setReceiveLoadingId(item._id);
+      setReceiveLoadingId(selectedOrder._id);
 
       const payload = {
-        purchaseOrder: item.purchaseOrder?._id || item.purchaseOrder,
-        supplier: item.supplier?._id || item.supplier,
+        purchaseOrder:
+          selectedOrder.purchaseOrder?._id || selectedOrder.purchaseOrder,
+        supplier: selectedOrder.supplier?._id || selectedOrder.supplier,
         receivedDate: new Date().toISOString(),
+        receivedBy: receiveForm.receivedBy,
+        warehouse: receiveForm.warehouse,
+        remarks: receiveForm.remarks,
         status: "Received",
-        remarks: "Goods received successfully.",
+        items:
+          selectedOrder.purchaseOrder?.items?.map((row) => ({
+            product: row.product?._id || row.product,
+            orderedQty: row.quantity,
+            receivedQty: row.quantity,
+            rejectedQty: 0,
+            remarks: "",
+          })) || [],
       };
 
       const res = await api.post("/purchases/grn", payload);
 
       if (res.data.success) {
         toast.success("Goods Received", "GRN created successfully.");
+        closeReceiveModal();
         fetchGoodsReceived();
       }
     } catch (error) {
-      console.error("Receive failed:", error);
-
       toast.error(
         "Receive Failed",
         error.response?.data?.message || "Something went wrong."
@@ -217,32 +303,46 @@ const GoodsReceived = () => {
                       </td>
 
                       <td className="px-4 py-4 text-gray-600">
-                        {purchaseOrder.items?.length || 0}
+                        {purchaseOrder.items?.length || item.items?.length || 0}
                       </td>
 
                       <td className="px-4 py-4">
                         <Badge variant={getStatusVariant(item.status)}>
-                          {item.status || "Received"}
+                          {item.status === "Pending" ? "Pending" : "Received"}
                         </Badge>
                       </td>
 
                       <td className="px-4 py-4 text-right">
                         <div className="flex justify-end gap-2">
-                          <button className="p-2 rounded-lg hover:bg-emerald-50 text-gray-600 hover:text-emerald-600">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              navigate(
+                                item.isPendingOrder
+                                  ? `/purchases/orders/${
+                                      item.purchaseOrder?._id || item._id
+                                    }`
+                                  : `/purchases/grn/${item._id}`
+                              )
+                            }
+                            className="p-2 rounded-lg hover:bg-emerald-50 text-gray-600 hover:text-emerald-600"
+                          >
                             <Eye size={17} />
                           </button>
 
-                          <Button
-                            type="button"
-                            onClick={() => handleReceive(item)}
-                            disabled={receiveLoadingId === item._id}
-                            className="bg-emerald-500 hover:bg-emerald-600 text-white"
-                          >
-                            <CheckCircle size={16} />
-                            {receiveLoadingId === item._id
-                              ? "Receiving..."
-                              : "Receive"}
-                          </Button>
+                          {item.status === "Pending" && (
+                            <Button
+                              type="button"
+                              onClick={() => openReceiveModal(item)}
+                              disabled={receiveLoadingId === item._id}
+                              className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                            >
+                              <CheckCircle size={16} />
+                              {receiveLoadingId === item._id
+                                ? "Receiving..."
+                                : "Receive"}
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -260,6 +360,105 @@ const GoodsReceived = () => {
           )}
         </div>
       </Card>
+
+      {showReceiveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl">
+            <div className="mb-5 flex items-start justify-between gap-4 border-b border-gray-100 pb-4">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">
+                  Receive Goods
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Confirm receiving details for this purchase order.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeReceiveModal}
+                className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-gray-700">
+                  Received By <span className="text-red-500">*</span>
+                </label>
+
+                <input
+                  name="receivedBy"
+                  value={receiveForm.receivedBy}
+                  onChange={handleReceiveFormChange}
+                  placeholder="Enter receiver name"
+                  className={`${inputClass} mt-2`}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-gray-700">
+                  Warehouse <span className="text-red-500">*</span>
+                </label>
+
+                <select
+                  name="warehouse"
+                  value={receiveForm.warehouse}
+                  onChange={handleReceiveFormChange}
+                  className={`${inputClass} mt-2`}
+                >
+                  <option value="">Select Warehouse</option>
+
+                  {warehouses.map((warehouse) => (
+                    <option key={warehouse._id} value={warehouse._id}>
+                      {warehouse.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-gray-700">
+                  Remarks
+                </label>
+
+                <textarea
+                  name="remarks"
+                  value={receiveForm.remarks}
+                  onChange={handleReceiveFormChange}
+                  rows={4}
+                  placeholder="Enter remarks"
+                  className={`${inputClass} mt-2 h-auto resize-none py-3`}
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col justify-end gap-3 border-t border-gray-100 pt-5 sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={closeReceiveModal}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                type="button"
+                onClick={handleReceive}
+                disabled={receiveLoadingId === selectedOrder?._id}
+                className="bg-emerald-500 hover:bg-emerald-600 text-white"
+              >
+                <CheckCircle size={16} />
+                {receiveLoadingId === selectedOrder?._id
+                  ? "Receiving..."
+                  : "Confirm Receive"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

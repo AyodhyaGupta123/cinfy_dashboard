@@ -1,10 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  Plus,
-  Search,
-  Download,
-  PackagePlus,
-} from "lucide-react";
+import { Plus, Search, Download, PackagePlus } from "lucide-react";
 
 import { Link } from "react-router-dom";
 
@@ -14,9 +9,7 @@ import Breadcrumb from "../../../components/UI/Breadcrumb";
 import { useToast } from "../../../components/UI/Toast";
 import api from "../../../services/api";
 
-const API_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 const inputClass =
   "w-full h-11 rounded-xl border border-gray-200 bg-white px-4 text-gray-900 placeholder:text-gray-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
@@ -45,19 +38,17 @@ const StockIn = () => {
       });
 
       if (res.data.success) {
-        setTransactions(res.data.transactions || []);
+        setTransactions(res.data.transactions || res.data.data || []);
       }
     } catch (error) {
       toast.error(
         "Failed",
-        error.response?.data?.message ||
-          "Failed to load stock entries"
+        error.response?.data?.message || "Failed to load stock entries",
       );
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchStockIn();
   }, []);
@@ -70,16 +61,14 @@ const StockIn = () => {
         ${item.referenceNo || ""}
       `;
 
-      return value
-        .toLowerCase()
-        .includes(search.toLowerCase());
+      return value.toLowerCase().includes(search.toLowerCase());
     });
   }, [transactions, search]);
 
   const stats = useMemo(() => {
     const totalQty = transactions.reduce(
       (acc, item) => acc + Number(item.quantity || 0),
-      0
+      0,
     );
 
     return {
@@ -152,9 +141,7 @@ const StockIn = () => {
 
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Stock In
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Stock In</h1>
 
           <p className="text-gray-500 mt-1">
             Track incoming stock and inventory entries.
@@ -177,9 +164,7 @@ const StockIn = () => {
             </div>
 
             <div>
-              <p className="text-sm text-gray-500">
-                Total Stock In
-              </p>
+              <p className="text-sm text-gray-500">Total Stock In</p>
 
               <h3 className="text-2xl font-bold text-gray-900">
                 {stats.total}
@@ -189,9 +174,7 @@ const StockIn = () => {
         </Card>
 
         <Card className="p-5 bg-white">
-          <p className="text-sm text-gray-500">
-            Total Entries
-          </p>
+          <p className="text-sm text-gray-500">Total Entries</p>
 
           <h3 className="text-2xl font-bold text-emerald-600">
             {stats.completed}
@@ -199,9 +182,7 @@ const StockIn = () => {
         </Card>
 
         <Card className="p-5 bg-white">
-          <p className="text-sm text-gray-500">
-            Pending
-          </p>
+          <p className="text-sm text-gray-500">Pending</p>
 
           <h3 className="text-2xl font-bold text-orange-500">
             {stats.pending}
@@ -274,26 +255,24 @@ const StockIn = () => {
                 </tr>
               ) : filteredTransactions.length > 0 ? (
                 filteredTransactions.map((item) => (
-                  <tr
-                    key={item._id}
-                    className="hover:bg-gray-50"
-                  >
+                  <tr key={item._id} className="hover:bg-gray-50">
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-12 w-12 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center">
-                          {item.product?.image ? (
+                          {item.product?.image ||
+                          item.product?.thumbnail ||
+                          item.product?.images?.[0] ? (
                             <img
                               src={getImageUrl(
-                                item.product.image
+                                item.product?.image ||
+                                  item.product?.thumbnail ||
+                                  item.product?.images?.[0],
                               )}
                               alt={item.product?.name}
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <PackagePlus
-                              size={20}
-                              className="text-gray-400"
-                            />
+                            <PackagePlus size={20} className="text-gray-400" />
                           )}
                         </div>
 

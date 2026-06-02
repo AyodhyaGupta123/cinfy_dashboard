@@ -189,6 +189,7 @@ export const updateSupplier = (id, data) =>
 export const deleteSupplier = (id) =>
   api.delete(`/purchases/suppliers/${id}`);
 
+
 /* UNIT APIs */
 
 export const getUnits = () => api.get("/units");

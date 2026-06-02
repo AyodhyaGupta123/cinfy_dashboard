@@ -42,7 +42,7 @@ const Products = () => {
     } catch (error) {
       toast.error(
         "Load Failed",
-        error.response?.data?.message || "Failed to load products"
+        error.response?.data?.message || "Failed to load products",
       );
     } finally {
       setLoading(false);
@@ -55,7 +55,7 @@ const Products = () => {
 
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
-      "Are you sure you want to delete this product?"
+      "Are you sure you want to delete this product?",
     );
 
     if (!confirmDelete) return;
@@ -67,7 +67,7 @@ const Products = () => {
     } catch (error) {
       toast.error(
         "Delete Failed",
-        error.response?.data?.message || "Something went wrong"
+        error.response?.data?.message || "Something went wrong",
       );
     }
   };
@@ -101,15 +101,15 @@ const Products = () => {
   const filteredProducts = useMemo(() => {
     return products.filter((item) => {
       const value = `
-        ${item.name || ""}
-        ${item.shortName || ""}
-        ${item.sku || ""}
-        ${item.brand || ""}
-        ${item.category || ""}
-        ${item.subCategory || ""}
-        ${item.productType || ""}
-        ${item.primaryUnit || item.unit || ""}
-      `;
+    ${item.name || ""}
+    ${item.shortName || ""}
+    ${item.sku || ""}
+    ${item.brandId?.name || item.brandName || ""}
+    ${item.categoryId?.name || item.categoryName || ""}
+    ${item.subCategoryId?.name || item.subCategoryName || ""}
+    ${item.productType || ""}
+    ${item.primaryUnit || item.unit || ""}
+  `;
 
       return value.toLowerCase().includes(search.toLowerCase());
     });
@@ -121,9 +121,7 @@ const Products = () => {
     const featured = products.filter((p) => p.featuredProduct).length;
     const outOfStock = products.filter((p) => getStock(p) <= 0).length;
     const lowStock = products.filter(
-      (p) =>
-        getStock(p) > 0 &&
-        getStock(p) <= Number(p.minStockLevel || 0)
+      (p) => getStock(p) > 0 && getStock(p) <= Number(p.minStockLevel || 0),
     ).length;
 
     return { total, active, featured, lowStock, outOfStock };
@@ -301,7 +299,7 @@ const Products = () => {
                           {product.thumbnail || product.image ? (
                             <img
                               src={getImageUrl(
-                                product.thumbnail || product.image
+                                product.thumbnail || product.image,
                               )}
                               alt={product.name}
                               className="h-12 w-12 rounded-xl object-cover border border-gray-200"
@@ -326,29 +324,45 @@ const Products = () => {
                         </div>
                       </td>
 
-                      <td className="px-4 py-4 text-gray-600">
-                        <p className="font-medium text-gray-800">
-                          {product.category || "-"}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {product.subCategory || "No sub category"}
-                        </p>
+                      {/* Category */}
+                      <td className="px-4 py-4">
+                        <div className="space-y-1">
+                          <p className="font-medium text-gray-800">
+                            {product.category?.name ||
+                              product.categoryName ||
+                              "-"}
+                          </p>
+
+                          <p className="text-xs text-gray-400">
+                            {product.subCategory?.name ||
+                              product.subCategoryName ||
+                              "No sub category"}
+                          </p>
+                        </div>
                       </td>
 
-                      <td className="px-4 py-4 text-gray-600">
-                        <p className="font-medium text-gray-800">
-                          {product.brand || "-"}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {product.primaryUnit || product.unit || "-"}
-                        </p>
+                      {/* Brand / Unit */}
+                      <td className="px-4 py-4">
+                        <div className="space-y-1">
+                          <p className="font-medium text-gray-800">
+                            {product.brand?.name || product.brandName || "-"}
+                          </p>
+
+                          <p className="text-xs text-gray-400">
+                            {product.primaryUnit || product.unit || "-"}
+                          </p>
+                        </div>
                       </td>
 
-                      <td className="px-4 py-4 text-gray-600">
-                        <p className="font-semibold text-gray-900">{stock}</p>
-                        <p className="text-xs text-gray-400">
-                          Min: {product.minStockLevel || 0}
-                        </p>
+                      {/* Stock */}
+                      <td className="px-4 py-4">
+                        <div className="space-y-1">
+                          <p className="font-semibold text-gray-900">{stock}</p>
+
+                          <p className="text-xs text-gray-400">
+                            Min: {product.minStockLevel || 0}
+                          </p>
+                        </div>
                       </td>
 
                       <td className="px-4 py-4">
@@ -363,7 +377,7 @@ const Products = () => {
                       <td className="px-4 py-4">
                         <span
                           className={`inline-flex items-center px-3 py-1 rounded-full border text-xs font-semibold ${getInventoryClass(
-                            inventoryStatus
+                            inventoryStatus,
                           )}`}
                         >
                           {inventoryStatus}
@@ -373,7 +387,7 @@ const Products = () => {
                       <td className="px-4 py-4">
                         <span
                           className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize ${getActiveClass(
-                            product.status || "active"
+                            product.status || "active",
                           )}`}
                         >
                           {product.status || "active"}

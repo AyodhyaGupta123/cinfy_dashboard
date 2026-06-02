@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, Save, Layers } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Card from "../../../components/UI/Card";
 import Button from "../../../components/UI/Button";
 import Breadcrumb from "../../../components/UI/Breadcrumb";
@@ -13,16 +13,18 @@ const inputClass =
 const textareaClass =
   "mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 resize-none";
 
-const AddSubCategory = () => {
+const EditSubCategory = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
 
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false);
   const [categories, setCategories] = useState([]);
 
   const [formData, setFormData] = useState({
     name: "",
-    categoryId: "",
+    category: "",
     description: "",
     displayOrder: "",
     notes: "",
@@ -36,14 +38,40 @@ const AddSubCategory = () => {
     } catch (error) {
       toast.error(
         "Load Failed",
-        error.response?.data?.message || "Failed to load categories",
+        error.response?.data?.message || "Failed to load categories"
       );
+    }
+  };
+
+  const fetchSubCategory = async () => {
+    try {
+      setPageLoading(true);
+
+      const res = await api.get(`/subcategories/${id}`);
+      const data = res.data.subcategory || res.data.subCategory || res.data.data;
+
+      setFormData({
+        name: data?.name || "",
+        category: data?.category || "",
+        description: data?.description || "",
+        displayOrder: data?.displayOrder || "",
+        notes: data?.notes || "",
+        status: data?.status || "active",
+      });
+    } catch (error) {
+      toast.error(
+        "Load Failed",
+        error.response?.data?.message || "Failed to load sub category"
+      );
+    } finally {
+      setPageLoading(false);
     }
   };
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+    fetchSubCategory();
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,7 +85,7 @@ const AddSubCategory = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.categoryId) {
+    if (!formData.category) {
       toast.error("Validation Error", "Parent category is required.");
       return;
     }
@@ -70,25 +98,32 @@ const AddSubCategory = () => {
     try {
       setLoading(true);
 
-      const res = await api.post("/subcategories", {
+      const res = await api.put(`/subcategories/${id}`, {
         ...formData,
-        categoryId: formData.categoryId,
         displayOrder: Number(formData.displayOrder || 0),
       });
 
       if (res.data.success) {
-        toast.success("Created", "Sub category added successfully.");
+        toast.success("Updated", "Sub category updated successfully.");
         navigate("/inventory/subcategories");
       }
     } catch (error) {
       toast.error(
-        "Create Failed",
-        error.response?.data?.message || "Something went wrong",
+        "Update Failed",
+        error.response?.data?.message || "Something went wrong"
       );
     } finally {
       setLoading(false);
     }
   };
+
+  if (pageLoading) {
+    return (
+      <div className="py-10 text-center text-gray-500">
+        Loading sub category...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -97,15 +132,17 @@ const AddSubCategory = () => {
           { label: "Dashboard", path: "/" },
           { label: "Inventory" },
           { label: "Sub Categories", path: "/inventory/subcategories" },
-          { label: "Add Sub Category" },
+          { label: "Edit Sub Category" },
         ]}
       />
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Add Sub Category</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Edit Sub Category
+          </h1>
           <p className="text-gray-500 mt-1">
-            Create a new sub category under a parent category.
+            Update sub category information.
           </p>
         </div>
 
@@ -128,7 +165,7 @@ const AddSubCategory = () => {
               Sub Category Information
             </h2>
             <p className="text-sm text-gray-500">
-              Enter sub category details below.
+              Edit sub category details below.
             </p>
           </div>
         </div>
@@ -143,15 +180,14 @@ const AddSubCategory = () => {
             </label>
 
             <select
-              name="categoryId"
-              value={formData.categoryId}
+              name="category"
+              value={formData.category}
               onChange={handleChange}
               className={inputClass}
             >
               <option value="">Select parent category</option>
-
               {categories.map((item) => (
-                <option key={item._id} value={item._id}>
+                <option key={item._id} value={item.name}>
                   {item.name}
                 </option>
               ))}
@@ -246,7 +282,7 @@ const AddSubCategory = () => {
               className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white"
             >
               <Save size={18} />
-              {loading ? "Saving..." : "Save Sub Category"}
+              {loading ? "Updating..." : "Update Sub Category"}
             </Button>
           </div>
         </form>
@@ -255,4 +291,4 @@ const AddSubCategory = () => {
   );
 };
 
-export default AddSubCategory;
+export default EditSubCategory;

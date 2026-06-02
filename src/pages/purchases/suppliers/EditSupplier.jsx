@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Save,
@@ -8,7 +8,7 @@ import {
   CreditCard,
   FileText,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Card from "../../../components/UI/Card";
 import Button from "../../../components/UI/Button";
 import Breadcrumb from "../../../components/UI/Breadcrumb";
@@ -16,16 +16,73 @@ import { useToast } from "../../../components/UI/Toast";
 import api from "../../../services/api";
 
 const inputClass =
-  "w-full h-11 rounded-xl border border-gray-200 bg-white px-4 text-gray-900 placeholder:text-gray-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
+  "w-full h-11 rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
 
 const textareaClass =
-  "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 resize-none";
+  "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 resize-none";
 
-const AddSupplier = () => {
+const Field = ({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+  required,
+}) => (
+  <div>
+    <label className="mb-2 block text-sm font-semibold text-gray-700">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder || label}
+      className={inputClass}
+    />
+  </div>
+);
+
+const TextareaField = ({ label, name, value, onChange, placeholder }) => (
+  <div>
+    <label className="mb-2 block text-sm font-semibold text-gray-700">
+      {label}
+    </label>
+
+    <textarea
+      name={name}
+      value={value}
+      onChange={onChange}
+      rows={4}
+      placeholder={placeholder || label}
+      className={textareaClass}
+    />
+  </div>
+);
+
+const SectionTitle = ({ icon: Icon, title, subtitle }) => (
+  <div className="mb-5 flex items-center gap-4 border-b border-gray-100 pb-5">
+    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500">
+      <Icon size={22} />
+    </div>
+
+    <div>
+      <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+      <p className="text-sm text-gray-500">{subtitle}</p>
+    </div>
+  </div>
+);
+
+const EditSupplier = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
 
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -46,6 +103,49 @@ const AddSupplier = () => {
     notes: "",
     status: "active",
   });
+
+  const fetchSupplier = async () => {
+    try {
+      setPageLoading(true);
+
+      const res = await api.get(`/purchases/suppliers/${id}`);
+
+      if (res.data.success) {
+        const supplier = res.data.supplier || {};
+
+        setFormData({
+          name: supplier.name || "",
+          company: supplier.company || "",
+          contactPerson: supplier.contactPerson || supplier.contact || "",
+          email: supplier.email || "",
+          phone: supplier.phone || "",
+          alternatePhone: supplier.alternatePhone || supplier.altPhone || "",
+          gst: supplier.gst || supplier.gstNumber || "",
+          pan: supplier.pan || supplier.panNumber || "",
+          city: supplier.city || "",
+          state: supplier.state || "",
+          pincode: supplier.pincode || supplier.pinCode || "",
+          address: supplier.address || "",
+          openingBalance: supplier.openingBalance ?? supplier.balance ?? "",
+          creditLimit: supplier.creditLimit ?? "",
+          paymentTerms: supplier.paymentTerms || "30 Days",
+          notes: supplier.notes || supplier.description || "",
+          status: supplier.status || "active",
+        });
+      }
+    } catch (error) {
+      toast.error(
+        "Load Failed",
+        error.response?.data?.message || "Unable to load supplier."
+      );
+    } finally {
+      setPageLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSupplier();
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -78,28 +178,6 @@ const AddSupplier = () => {
     return true;
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      company: "",
-      contactPerson: "",
-      email: "",
-      phone: "",
-      alternatePhone: "",
-      gst: "",
-      pan: "",
-      city: "",
-      state: "",
-      pincode: "",
-      address: "",
-      openingBalance: "",
-      creditLimit: "",
-      paymentTerms: "30 Days",
-      notes: "",
-      status: "active",
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -114,52 +192,27 @@ const AddSupplier = () => {
         creditLimit: Number(formData.creditLimit || 0),
       };
 
-      const res = await api.post("/purchases/suppliers", payload);
+      const res = await api.put(`/purchases/suppliers/${id}`, payload);
 
       if (res.data.success) {
-        toast.success("Supplier Created", "Supplier added successfully.");
-        resetForm();
-        navigate("/purchases/suppliers");
+        toast.success("Supplier Updated", "Supplier updated successfully.");
+        navigate(`/purchases/suppliers/${id}`);
       }
     } catch (error) {
       toast.error(
-        "Create Failed",
-        error.response?.data?.message || "Something went wrong."
+        "Update Failed",
+        error.response?.data?.message || "Unable to update supplier."
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const Field = ({ label, name, type = "text", placeholder, required }) => (
-    <div>
-      <label className="mb-2 block text-sm font-semibold text-gray-700">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-
-      <input
-        type={type}
-        name={name}
-        placeholder={placeholder}
-        value={formData[name]}
-        onChange={handleChange}
-        className={inputClass}
-      />
-    </div>
-  );
-
-  const SectionTitle = ({ icon: Icon, title, subtitle }) => (
-    <div className="mb-5 flex items-center gap-4 border-b border-gray-100 pb-5">
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500">
-        <Icon size={22} />
-      </div>
-
-      <div>
-        <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-        <p className="text-sm text-gray-500">{subtitle}</p>
-      </div>
-    </div>
-  );
+  if (pageLoading) {
+    return (
+      <div className="p-6 text-center text-gray-500">Loading supplier...</div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -168,15 +221,15 @@ const AddSupplier = () => {
           { label: "Dashboard", path: "/" },
           { label: "Purchases" },
           { label: "Suppliers", path: "/purchases/suppliers" },
-          { label: "Add Supplier" },
+          { label: "Edit Supplier" },
         ]}
       />
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Add Supplier</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Edit Supplier</h1>
           <p className="mt-1 text-gray-500">
-            Create supplier profile for purchases, GRN, payments, and inventory
+            Update supplier details for purchases, GRN, and inventory
             procurement.
           </p>
         </div>
@@ -201,40 +254,46 @@ const AddSupplier = () => {
             <Field
               label="Supplier Name"
               name="name"
-              placeholder="Enter supplier name"
+              value={formData.name}
+              onChange={handleChange}
               required
             />
 
             <Field
               label="Company Name"
               name="company"
-              placeholder="Enter company name"
+              value={formData.company}
+              onChange={handleChange}
             />
 
             <Field
               label="Contact Person"
               name="contactPerson"
-              placeholder="Enter contact person"
+              value={formData.contactPerson}
+              onChange={handleChange}
             />
 
             <Field
               label="Phone Number"
               name="phone"
-              placeholder="9876543210"
+              value={formData.phone}
+              onChange={handleChange}
               required
             />
 
             <Field
               label="Alternate Phone"
               name="alternatePhone"
-              placeholder="Enter alternate phone"
+              value={formData.alternatePhone}
+              onChange={handleChange}
             />
 
             <Field
               label="Email Address"
               name="email"
               type="email"
-              placeholder="supplier@example.com"
+              value={formData.email}
+              onChange={handleChange}
             />
           </div>
         </Card>
@@ -250,10 +309,16 @@ const AddSupplier = () => {
             <Field
               label="GST Number"
               name="gst"
-              placeholder="23ABCDE1234F1Z5"
+              value={formData.gst}
+              onChange={handleChange}
             />
 
-            <Field label="PAN Number" name="pan" placeholder="ABCDE1234F" />
+            <Field
+              label="PAN Number"
+              name="pan"
+              value={formData.pan}
+              onChange={handleChange}
+            />
 
             <div>
               <label className="mb-2 block text-sm font-semibold text-gray-700">
@@ -281,22 +346,34 @@ const AddSupplier = () => {
           />
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-            <Field label="City" name="city" placeholder="Enter city" />
-            <Field label="State" name="state" placeholder="Enter state" />
-            <Field label="Pincode" name="pincode" placeholder="462001" />
+            <Field
+              label="City"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+            />
+
+            <Field
+              label="State"
+              name="state"
+              value={formData.state}
+              onChange={handleChange}
+            />
+
+            <Field
+              label="Pincode"
+              name="pincode"
+              value={formData.pincode}
+              onChange={handleChange}
+            />
 
             <div className="md:col-span-3">
-              <label className="mb-2 block text-sm font-semibold text-gray-700">
-                Address
-              </label>
-
-              <textarea
+              <TextareaField
+                label="Address"
                 name="address"
-                placeholder="Enter supplier full address..."
                 value={formData.address}
                 onChange={handleChange}
-                rows={4}
-                className={textareaClass}
+                placeholder="Enter supplier full address..."
               />
             </div>
           </div>
@@ -314,14 +391,16 @@ const AddSupplier = () => {
               label="Opening Balance"
               name="openingBalance"
               type="number"
-              placeholder="0"
+              value={formData.openingBalance}
+              onChange={handleChange}
             />
 
             <Field
               label="Credit Limit"
               name="creditLimit"
               type="number"
-              placeholder="0"
+              value={formData.creditLimit}
+              onChange={handleChange}
             />
 
             <div>
@@ -353,18 +432,17 @@ const AddSupplier = () => {
             subtitle="Internal notes and supplier remarks."
           />
 
-          <textarea
+          <TextareaField
+            label="Notes"
             name="notes"
-            placeholder="Enter additional notes..."
             value={formData.notes}
             onChange={handleChange}
-            rows={4}
-            className={textareaClass}
+            placeholder="Enter additional notes..."
           />
         </Card>
 
         <div className="flex flex-col justify-end gap-3 border-t border-gray-100 pt-5 sm:flex-row">
-          <Link to="/purchases/suppliers">
+          <Link to={`/purchases/suppliers/${id}`}>
             <Button type="button" variant="outline">
               Cancel
             </Button>
@@ -376,12 +454,12 @@ const AddSupplier = () => {
             className="bg-emerald-500 text-white hover:bg-emerald-600"
           >
             <Save size={18} />
-            {loading ? "Saving Supplier..." : "Save Supplier"}
+            {loading ? "Updating Supplier..." : "Update Supplier"}
           </Button>
         </div>
       </form>
     </div>
   );
-};
+};  
 
-export default AddSupplier;
+export default EditSupplier;

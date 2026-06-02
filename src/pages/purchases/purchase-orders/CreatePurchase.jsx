@@ -16,7 +16,10 @@ const CreatePurchase = () => {
 
   const [loading, setLoading] = useState(false);
   const [supplierLoading, setSupplierLoading] = useState(false);
+  const [productLoading, setProductLoading] = useState(false);
+
   const [suppliers, setSuppliers] = useState([]);
+  const [products, setProducts] = useState([]);
 
   const [formData, setFormData] = useState({
     supplier: "",
@@ -25,19 +28,23 @@ const CreatePurchase = () => {
     notes: "",
   });
 
-  const [items, setItems] = useState([{ product: "", quantity: 1, rate: 0 }]);
+  const [items, setItems] = useState([
+    {
+      product: "",
+      quantity: 1,
+      rate: 0,
+    },
+  ]);
 
   const fetchSuppliers = async () => {
     try {
       setSupplierLoading(true);
-
       const res = await api.get("/purchases/suppliers");
 
       if (res.data.success) {
         setSuppliers(res.data.suppliers || []);
       }
     } catch (error) {
-      console.error("Failed to fetch suppliers:", error);
       toast.error(
         "Supplier Load Failed",
         error.response?.data?.message || "Unable to load suppliers."
@@ -47,8 +54,27 @@ const CreatePurchase = () => {
     }
   };
 
+  const fetchProducts = async () => {
+    try {
+      setProductLoading(true);
+      const res = await api.get("/products");
+
+      if (res.data.success) {
+        setProducts(res.data.products || []);
+      }
+    } catch (error) {
+      toast.error(
+        "Product Load Failed",
+        error.response?.data?.message || "Unable to load products."
+      );
+    } finally {
+      setProductLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchSuppliers();
+    fetchProducts();
   }, []);
 
   const totalAmount = useMemo(() => {
@@ -80,12 +106,18 @@ const CreatePurchase = () => {
   };
 
   const addItem = () => {
-    setItems((prev) => [...prev, { product: "", quantity: 1, rate: 0 }]);
+    setItems((prev) => [
+      ...prev,
+      {
+        product: "",
+        quantity: 1,
+        rate: 0,
+      },
+    ]);
   };
 
   const removeItem = (index) => {
     if (items.length === 1) return;
-
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -102,7 +134,7 @@ const CreatePurchase = () => {
 
     const hasInvalidItem = items.some(
       (item) =>
-        !item.product.trim() ||
+        !item.product ||
         Number(item.quantity) <= 0 ||
         Number(item.rate) <= 0
     );
@@ -110,7 +142,7 @@ const CreatePurchase = () => {
     if (hasInvalidItem) {
       toast.error(
         "Validation Error",
-        "Please enter valid product, quantity, and rate for all items."
+        "Please select product and enter valid quantity and rate."
       );
       return false;
     }
@@ -131,10 +163,14 @@ const CreatePurchase = () => {
         purchaseDate: formData.date,
         expectedDate: formData.expectedDate || null,
         notes: formData.notes,
+        subtotal: totalAmount,
+        gstAmount: 0,
+        totalAmount,
         items: items.map((item) => ({
-          product: item.product.trim(),
+          product: item.product,
           quantity: Number(item.quantity),
           rate: Number(item.rate),
+          amount: Number(item.quantity) * Number(item.rate),
         })),
       };
 
@@ -149,8 +185,6 @@ const CreatePurchase = () => {
         navigate("/purchases/orders");
       }
     } catch (error) {
-      console.error("Create purchase failed:", error);
-
       toast.error(
         "Create Failed",
         error.response?.data?.message || "Something went wrong."
@@ -177,7 +211,7 @@ const CreatePurchase = () => {
             Create Purchase Order
           </h1>
           <p className="text-gray-500 mt-1">
-            Add supplier, purchase date, items, quantity, and rate details.
+            Add supplier, product, quantity, and rate details.
           </p>
         </div>
 
@@ -209,8 +243,9 @@ const CreatePurchase = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Supplier
+                Supplier <span className="text-red-500">*</span>
               </label>
+
               <select
                 name="supplier"
                 value={formData.supplier}
@@ -232,8 +267,9 @@ const CreatePurchase = () => {
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Purchase Date
+                Purchase Date <span className="text-red-500">*</span>
               </label>
+
               <input
                 type="date"
                 name="date"
@@ -247,6 +283,7 @@ const CreatePurchase = () => {
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Expected Date
               </label>
+
               <input
                 type="date"
                 name="expectedDate"
@@ -264,7 +301,7 @@ const CreatePurchase = () => {
                   Purchase Items
                 </h2>
                 <p className="text-sm text-gray-500">
-                  Add product, quantity, rate, and amount details.
+                  Select product, quantity, rate, and amount.
                 </p>
               </div>
 
@@ -290,23 +327,36 @@ const CreatePurchase = () => {
                   >
                     <div className="md:col-span-5">
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Product
+                        Product <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        type="text"
-                        placeholder="Enter product name"
+
+                      <select
                         value={item.product}
                         onChange={(e) =>
                           handleItemChange(index, "product", e.target.value)
                         }
                         className={inputClass}
-                      />
+                        disabled={productLoading}
+                      >
+                        <option value="">
+                          {productLoading
+                            ? "Loading products..."
+                            : "Select product"}
+                        </option>
+
+                        {products.map((product) => (
+                          <option key={product._id} value={product._id}>
+                            {product.name} - SKU: {product.sku}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="md:col-span-2">
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Quantity
                       </label>
+
                       <input
                         type="number"
                         min="1"
@@ -322,6 +372,7 @@ const CreatePurchase = () => {
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Rate
                       </label>
+
                       <input
                         type="number"
                         min="1"
@@ -337,6 +388,7 @@ const CreatePurchase = () => {
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Amount
                       </label>
+
                       <div className="h-11 flex items-center px-4 rounded-xl bg-white border border-gray-200 font-semibold text-gray-900">
                         ₹{amount.toLocaleString("en-IN")}
                       </div>
@@ -375,6 +427,7 @@ const CreatePurchase = () => {
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Notes
             </label>
+
             <textarea
               name="notes"
               placeholder="Write purchase notes..."
