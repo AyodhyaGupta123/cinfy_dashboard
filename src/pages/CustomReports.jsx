@@ -24,6 +24,37 @@ import { useToast } from "../components/UI/Toast";
 import { theme } from "../theme/constants";
 import api from "../services/api";
 
+const TYPE_OPTIONS = [
+  { label: "All Types", value: "all" },
+  { label: "Revenue", value: "revenue" },
+  { label: "Performance", value: "performance" },
+  { label: "Analytics", value: "analytics" },
+  { label: "Ads", value: "ads" },
+];
+
+const SCHEDULE_OPTIONS = [
+  { label: "All Schedules", value: "all" },
+  { label: "Daily", value: "daily" },
+  { label: "Weekly", value: "weekly" },
+  { label: "Monthly", value: "monthly" },
+];
+
+const STATUS_VARIANT = {
+  Completed: "success",
+  Running: "info",
+  Scheduled: "warning",
+};
+
+const formatDate = (date) => {
+  if (!date) return "-";
+
+  return new Date(date).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 const ActionMenu = ({ row, onView, onDownload, onDelete }) => {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
@@ -45,12 +76,10 @@ const ActionMenu = ({ row, onView, onDownload, onDelete }) => {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (
-        buttonRef.current &&
-        !buttonRef.current.contains(e.target) &&
-        menuRef.current &&
-        !menuRef.current.contains(e.target)
-      ) {
+      const clickedButton = buttonRef.current?.contains(e.target);
+      const clickedMenu = menuRef.current?.contains(e.target);
+
+      if (!clickedButton && !clickedMenu) {
         setOpen(false);
       }
     };
@@ -129,11 +158,52 @@ const ActionMenu = ({ row, onView, onDownload, onDelete }) => {
               Delete
             </button>
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );
 };
+
+const SummaryCard = ({ icon: Icon, label, value, color }) => (
+  <Card
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: 14,
+      padding: "16px 18px",
+    }}
+  >
+    <div
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 10,
+        background: `${color}14`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Icon style={{ width: 18, height: 18, color }} />
+    </div>
+
+    <div>
+      <div
+        style={{
+          fontSize: theme.fontSizeH2,
+          fontWeight: theme.fontWeightBold,
+          color: theme.textPrimary,
+        }}
+      >
+        {value}
+      </div>
+
+      <div style={{ fontSize: theme.fontSizeMuted, color: theme.textMuted }}>
+        {label}
+      </div>
+    </div>
+  </Card>
+);
 
 const CustomReports = () => {
   const toast = useToast();
@@ -151,12 +221,14 @@ const CustomReports = () => {
   const fetchReports = async () => {
     try {
       setLoading(true);
+
       const res = await api.get("/reports");
-      setReports(res.data.reports || res.data || []);
+
+      setReports(res.data.data?.reports || []);
     } catch (error) {
       toast.error(
         "Load Failed",
-        error.response?.data?.message || "Failed to load reports"
+        error.response?.data?.message || "Failed to load reports",
       );
     } finally {
       setLoading(false);
@@ -168,7 +240,9 @@ const CustomReports = () => {
   }, []);
 
   const filteredReports = useMemo(() => {
-    return reports.filter((report) => {
+    const list = Array.isArray(reports) ? reports : [];
+
+    return list.filter((report) => {
       const typeMatch =
         filters.type === "all" ||
         report.type?.toLowerCase() === filters.type.toLowerCase();
@@ -180,6 +254,36 @@ const CustomReports = () => {
       return typeMatch && scheduleMatch;
     });
   }, [reports, filters]);
+
+  const summaryCards = useMemo(
+    () => [
+      {
+        label: "Total Reports",
+        value: reports.length,
+        icon: FileText,
+        color: theme.primary,
+      },
+      {
+        label: "Completed",
+        value: reports.filter((item) => item.status === "Completed").length,
+        icon: BarChart2,
+        color: "#16a34a",
+      },
+      {
+        label: "Running",
+        value: reports.filter((item) => item.status === "Running").length,
+        icon: Filter,
+        color: "#3b82f6",
+      },
+      {
+        label: "Scheduled",
+        value: reports.filter((item) => item.status === "Scheduled").length,
+        icon: Calendar,
+        color: "#f97316",
+      },
+    ],
+    [reports],
+  );
 
   const handleDeleteReport = async () => {
     if (!selectedReport?._id) return;
@@ -193,47 +297,10 @@ const CustomReports = () => {
     } catch (error) {
       toast.error(
         "Delete Failed",
-        error.response?.data?.message || "Failed to delete report"
+        error.response?.data?.message || "Failed to delete report",
       );
     }
   };
-
-  const formatDate = (date) => {
-    if (!date) return "-";
-
-    return new Date(date).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const summaryCards = [
-    {
-      label: "Total Reports",
-      value: reports.length,
-      icon: FileText,
-      color: theme.primary,
-    },
-    {
-      label: "Completed",
-      value: reports.filter((item) => item.status === "Completed").length,
-      icon: BarChart2,
-      color: "#16a34a",
-    },
-    {
-      label: "Running",
-      value: reports.filter((item) => item.status === "Running").length,
-      icon: Filter,
-      color: "#3b82f6",
-    },
-    {
-      label: "Scheduled",
-      value: reports.filter((item) => item.status === "Scheduled").length,
-      icon: Calendar,
-      color: "#f97316",
-    },
-  ];
 
   const columns = [
     {
@@ -272,16 +339,11 @@ const CustomReports = () => {
     {
       header: "Status",
       accessor: "status",
-      render: (row) => {
-        const variant =
-          row.status === "Completed"
-            ? "success"
-            : row.status === "Running"
-            ? "info"
-            : "warning";
-
-        return <Badge variant={variant}>{row.status || "Scheduled"}</Badge>;
-      },
+      render: (row) => (
+        <Badge variant={STATUS_VARIANT[row.status] || "warning"}>
+          {row.status || "Scheduled"}
+        </Badge>
+      ),
     },
     {
       header: "Rows",
@@ -334,54 +396,11 @@ const CustomReports = () => {
             Create Report
           </Button>
         </Link>
-      </div>x
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {summaryCards.map((item) => (
-          <Card
-            key={item.label}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
-              padding: "16px 18px",
-            }}
-          >
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 10,
-                background: `${item.color}14`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <item.icon style={{ width: 18, height: 18, color: item.color }} />
-            </div>
-
-            <div>
-              <div
-                style={{
-                  fontSize: theme.fontSizeH2,
-                  fontWeight: theme.fontWeightBold,
-                  color: theme.textPrimary,
-                }}
-              >
-                {item.value}
-              </div>
-
-              <div
-                style={{
-                  fontSize: theme.fontSizeMuted,
-                  color: theme.textMuted,
-                }}
-              >
-                {item.label}
-              </div>
-            </div>
-          </Card>
+          <SummaryCard key={item.label} {...item} />
         ))}
       </div>
 
@@ -393,13 +412,7 @@ const CustomReports = () => {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, type: e.target.value }))
               }
-              options={[
-                { label: "All Types", value: "all" },
-                { label: "Revenue", value: "revenue" },
-                { label: "Performance", value: "performance" },
-                { label: "Analytics", value: "analytics" },
-                { label: "Ads", value: "ads" },
-              ]}
+              options={TYPE_OPTIONS}
               style={{ width: "100%" }}
             />
           </FormGroup>
@@ -410,12 +423,7 @@ const CustomReports = () => {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, schedule: e.target.value }))
               }
-              options={[
-                { label: "All Schedules", value: "all" },
-                { label: "Daily", value: "daily" },
-                { label: "Weekly", value: "weekly" },
-                { label: "Monthly", value: "monthly" },
-              ]}
+              options={SCHEDULE_OPTIONS}
               style={{ width: "100%" }}
             />
           </FormGroup>
@@ -437,13 +445,7 @@ const CustomReports = () => {
         </div>
 
         {loading ? (
-          <div
-            style={{
-              padding: 30,
-              textAlign: "center",
-              color: theme.textMuted,
-            }}
-          >
+          <div style={{ padding: 30, textAlign: "center", color: theme.textMuted }}>
             Loading reports...
           </div>
         ) : (
