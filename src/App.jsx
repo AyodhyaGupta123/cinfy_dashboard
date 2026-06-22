@@ -148,6 +148,8 @@ import SupplierDetails from "./pages/purchases/suppliers/SupplierDetails";
 import GoodsReceived from "./pages/purchases/grn/GoodsReceived";
 import GRNDetails from "./pages/purchases/grn/GRNDetails";
 import EditSupplier from "./pages/purchases/suppliers/EditSupplier";
+import Attributes from "./pages/Attributes";
+import EditUnit from "./pages/inventory/products/EditUnit";
 
 function ScrollToTop() {
   useScrollToTop();
@@ -283,6 +285,7 @@ function App() {
               ============================== */}
               <Route path="inventory/units" element={<UnitList />} />
               <Route path="inventory/units/add" element={<AddUnit />} />
+              <Route path="inventory/units/edit/:id" element={<EditUnit />} />
 
               {/* ==============================
                   INVENTORY - TAXES
@@ -389,6 +392,11 @@ function App() {
               ============================== */}
               <Route path="purchases/grn" element={<GoodsReceived />} />
               <Route path="purchases/grn/:id" element={<GRNDetails />} />
+
+              {/* ==============================
+                  INVENTORY - ATTRIBUTES
+              ============================== */}
+              <Route path="inventory/attributes" element={<Attributes />} />
             </Route>
 
             {/* ==============================

@@ -13,7 +13,7 @@ import Card from "../../../components/UI/Card";
 import Button from "../../../components/UI/Button";
 import Breadcrumb from "../../../components/UI/Breadcrumb";
 import { useToast } from "../../../components/UI/Toast";
-import api from "../../../services/api";
+import { getUnits, deleteUnit } from "../../../services/api";
 
 const UnitList = () => {
   const toast = useToast();
@@ -25,7 +25,7 @@ const UnitList = () => {
   const fetchUnits = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/units");
+      const res = await getUnits();
 
       setUnits(res.data.units || res.data || []);
     } catch (error) {
@@ -50,7 +50,7 @@ const UnitList = () => {
     if (!confirmDelete) return;
 
     try {
-      await api.delete(`/units/${id}`);
+      await deleteUnit(id);
       toast.success("Unit Deleted", "Unit deleted successfully.");
       fetchUnits();
     } catch (error) {
